@@ -2768,6 +2768,10 @@ function App(){
   const [tab,setTab]=useState('home');
   const [selId,setSelId]=useState(null);
   const [toast,setToast]=useState(null);
+  const [installEvent,setInstallEvent]=useState(null);
+  const [installDismissed,setInstallDismissed]=useState(false);
+  const [installed,setInstalled]=useState(false);
+  const [iosHint,setIosHint]=useState(false);
   const tk=useRef(0);
 
   useEffect(()=>{
@@ -2780,11 +2784,49 @@ function App(){
     if(!loading)db.set('lendtrack-v2',borrowers);
   },[borrowers,loading]);
 
+  useEffect(()=>{
+    const ua=navigator.userAgent||'';
+    const ios=/iphone|ipad|ipod/i.test(ua);
+    const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+    setIosHint(ios&&!standalone);
+    setInstalled(standalone);
+
+    const onBeforeInstallPrompt=e=>{
+      e.preventDefault();
+      setInstallEvent(e);
+    };
+    const onInstalled=()=>{
+      setInstalled(true);
+      setInstallEvent(null);
+      setInstallDismissed(false);
+      showToast('LendTrack installed');
+    };
+
+    window.addEventListener('beforeinstallprompt',onBeforeInstallPrompt);
+    window.addEventListener('appinstalled',onInstalled);
+    return()=>{
+      window.removeEventListener('beforeinstallprompt',onBeforeInstallPrompt);
+      window.removeEventListener('appinstalled',onInstalled);
+    };
+  },[]);
+
   function showToast(msg){tk.current++;setToast({msg,key:tk.current})}
   const addB=b=>{setBorrowers(p=>[...p,b]);setTab('home')};
   const updB=(id,ch)=>setBorrowers(p=>p.map(b=>b.id===id?{...b,...ch}:b));
   const delB=id=>{setBorrowers(p=>p.filter(b=>b.id!==id));setSelId(null);showToast('Borrower deleted ✓')};
   const clearAll=()=>{setBorrowers([]);db.del('lendtrack-v2')};
+  const showInstallCard=!installed&&!installDismissed&&(!!installEvent||iosHint);
+
+  async function handleInstall(){
+    if(installEvent){
+      installEvent.prompt();
+      const choice=await installEvent.userChoice.catch(()=>null);
+      setInstallEvent(null);
+      if(choice?.outcome!=='accepted')showToast('Install canceled');
+      return;
+    }
+    if(iosHint)showToast('Safari Share > Add to Home Screen');
+  }
 
   if(loading)return(
     <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100dvh',background:'var(--bg)'}}>
@@ -2814,6 +2856,34 @@ function App(){
         <AddBorrower onAdd={addB} showToast={showToast}/>
       ):(
         <Summary borrowers={borrowers} onClearAll={clearAll} showToast={showToast}/>
+      )}
+
+      {showInstallCard&&(
+        <div style={{position:'absolute',left:12,right:12,bottom:'calc(env(safe-area-inset-bottom) + 84px)',zIndex:45}}>
+          <div style={{background:'rgba(255,255,255,.96)',border:'1.5px solid rgba(29,78,216,.14)',borderRadius:20,padding:'14px 14px 12px',boxShadow:'0 14px 34px rgba(29,78,216,.18),0 2px 8px rgba(0,0,0,.06)',backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)'}}>
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:10}}>
+              <div>
+                <div style={{fontSize:14,fontWeight:900,color:'var(--txt)'}}>Install LendTrack</div>
+                <div style={{marginTop:4,fontSize:11.5,lineHeight:1.45,color:'#475569'}}>
+                  {installEvent
+                    ? 'Install the app for full-screen access from your home screen.'
+                    : 'On iPhone or iPad, open Safari, tap Share, then choose Add to Home Screen.'}
+                </div>
+              </div>
+              <button onClick={()=>setInstallDismissed(true)} style={{background:'transparent',border:'none',padding:2,cursor:'pointer',color:'#64748B',fontSize:18,lineHeight:1}}>
+                ×
+              </button>
+            </div>
+            <div style={{display:'flex',gap:8,marginTop:12}}>
+              <button className="btn btn-p" style={{flex:1,minHeight:42,borderRadius:14}} onClick={handleInstall}>
+                {installEvent?'Install App':'How to Install'}
+              </button>
+              <button className="btn" style={{minWidth:74,minHeight:42,borderRadius:14,background:'rgba(255,255,255,.7)',border:'1.5px solid rgba(29,78,216,.12)',color:'var(--txt2)'}} onClick={()=>setInstallDismissed(true)}>
+                Later
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Bottom Nav */}
