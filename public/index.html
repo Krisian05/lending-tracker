@@ -91,7 +91,8 @@ body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
 /* ══ GRADIENT HEADER (shared — Borrowers / Add / Summary) ══ */
 .ghdr{
   background:var(--grad-hdr);
-  padding:calc(env(safe-area-inset-top)+14px) 14px 14px;
+  padding:54px 14px 14px;
+  padding-top:calc(env(safe-area-inset-top)+28px);
   position:sticky;top:0;z-index:40;overflow:hidden;
   box-shadow:0 4px 20px rgba(12,26,58,.35);
 }
@@ -364,7 +365,8 @@ body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
 /* ══ DETAIL HEADER ══ */
 .dhdr{
   background:var(--grad-hdr);
-  padding:calc(env(safe-area-inset-top)+14px) 14px 14px;
+  padding:54px 14px 14px;
+  padding-top:calc(env(safe-area-inset-top)+28px);
   position:sticky;top:0;z-index:40;overflow:hidden;
   box-shadow:0 4px 20px rgba(12,26,58,.35);
 }
@@ -797,7 +799,8 @@ body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
 /* ══ DASHBOARD ══ */
 .dash-hdr{
   background:var(--grad-hdr);
-  padding:calc(env(safe-area-inset-top)+14px) 14px 14px;
+  padding:54px 14px 14px;
+  padding-top:calc(env(safe-area-inset-top)+28px);
   position:sticky;top:0;z-index:40;overflow:hidden;
   box-shadow:0 4px 20px rgba(12,26,58,.35);
 }
@@ -1149,7 +1152,7 @@ body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
 
 /* Small phone (iPhone SE, etc) — compact dash header */
 @media (max-height:667px) and (orientation:portrait){
-  .dash-hdr{padding:calc(env(safe-area-inset-top)+10px) 14px 10px}
+  .dash-hdr{padding-top:calc(env(safe-area-inset-top)+24px)}
   .dash-hero-card{margin:10px 12px 0;padding:14px 14px 12px}
   .dash-hero-stat-val{font-size:14px}
   .dash-rate{margin-top:8px}
@@ -1188,9 +1191,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* Dynamic Island / Notch — extra header breathing room */
 @supports(padding:env(safe-area-inset-top)){
-  .dash-hdr{padding-top:max(calc(env(safe-area-inset-top)+20px),36px)}
-  .ghdr{padding-top:max(calc(env(safe-area-inset-top)+18px),34px)}
-  .dhdr{padding-top:max(calc(env(safe-area-inset-top)+18px),34px)}
+  .dash-hdr{padding-top:max(calc(env(safe-area-inset-top)+28px),54px)}
+  .ghdr{padding-top:max(calc(env(safe-area-inset-top)+28px),54px)}
+  .dhdr{padding-top:max(calc(env(safe-area-inset-top)+28px),54px)}
 }
 
 /* Tap states — iOS doesn't show :hover so use :active */
@@ -1234,9 +1237,9 @@ button{-webkit-appearance:none;appearance:none}
 
 /* iPhone 14 Pro / 15 Pro — Dynamic Island extra space */
 @media (min-height:852px) and (orientation:portrait){
-  .dash-hdr{padding-top:max(calc(env(safe-area-inset-top)+24px),64px)}
-  .ghdr{padding-top:max(calc(env(safe-area-inset-top)+22px),62px)}
-  .dhdr{padding-top:max(calc(env(safe-area-inset-top)+22px),62px)}
+  .dash-hdr{padding-top:max(calc(env(safe-area-inset-top)+32px),80px)}
+  .ghdr{padding-top:max(calc(env(safe-area-inset-top)+32px),80px)}
+  .dhdr{padding-top:max(calc(env(safe-area-inset-top)+32px),80px)}
 }
 </style>
 </head>

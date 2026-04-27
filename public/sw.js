@@ -1,5 +1,5 @@
 // Service Worker for Personal Lending — Collection Tracker
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `lendtrack-static-${CACHE_VERSION}`;
 const DATA_CACHE = `lendtrack-data-${CACHE_VERSION}`;
 
