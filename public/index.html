@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover,user-scalable=no"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="theme-color" content="#1D4ED8"/>
@@ -1161,6 +1161,81 @@ body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
   .nav-btn{font-size:10px}
   .dgrid{grid-template-columns:repeat(10,1fr)}
   .sum-kpi-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ══ iPHONE / iOS POLISH ══ */
+
+/* Prevent iOS input zoom — all inputs must be ≥16px */
+input,select,textarea{font-size:16px!important}
+
+/* Rubber-band scroll: top shows dark gradient, bottom shows same */
+html{
+  background:linear-gradient(160deg,#020617,#0C1A3A,#1E3A8A,#1D4ED8);
+  overscroll-behavior:none;
+}
+
+/* Smoother momentum scroll on iOS */
+.screen{-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+
+/* Prevent text size adjust on rotate */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+/* Nav: taller safe area for iPhone home indicator */
+@supports(padding:max(0px)){
+  .nav{padding-bottom:max(env(safe-area-inset-bottom),12px)}
+  .screen{padding-bottom:max(calc(env(safe-area-inset-bottom)+90px),108px)}
+}
+
+/* Dynamic Island / Notch — extra header breathing room */
+@supports(padding:env(safe-area-inset-top)){
+  .dash-hdr{padding-top:max(env(safe-area-inset-top),16px)}
+  .ghdr{padding-top:max(env(safe-area-inset-top),14px)}
+  .dhdr{padding-top:max(env(safe-area-inset-top),14px)}
+}
+
+/* Tap states — iOS doesn't show :hover so use :active */
+.bcard:active,.dash-qcard:active,.hist-card:active{
+  transform:scale(.97)!important;
+  transition:transform .12s!important;
+}
+.nav-btn:active{transform:scale(.92)!important}
+.btn:active{transform:scale(.96)!important}
+
+/* Modal sheet — full bleed under home indicator on iPhone */
+.modal{padding-bottom:max(calc(env(safe-area-inset-bottom)+24px),36px)}
+
+/* Overlay backdrop — iOS Safari needs -webkit prefix */
+.overlay{
+  -webkit-backdrop-filter:blur(2px);
+  backdrop-filter:blur(2px);
+}
+
+/* Remove iOS button default styling */
+button{-webkit-appearance:none;appearance:none}
+
+/* Sharper shadows on Retina */
+@media (-webkit-min-device-pixel-ratio:2){
+  .bcard,.dash-qcard,.kpi-card,.form-card,.scard{
+    box-shadow:var(--sh),0 0 0 0.5px rgba(29,78,216,.06);
+  }
+  .nav-inner{
+    box-shadow:0 10px 40px rgba(29,78,216,.2),0 2px 8px rgba(0,0,0,.07),0 0 0 0.5px rgba(255,255,255,.5);
+  }
+}
+
+/* iPhone SE (small screen) */
+@media (max-height:667px) and (orientation:portrait){
+  .kpi-card{padding:13px 12px}
+  .kpi-card-val{font-size:20px}
+  .ghdr-hero{padding:13px 15px}
+  .ghdr-hero-stat-val{font-size:15px}
+  .dash-hero-card{padding:15px 15px 13px}
+}
+
+/* iPhone 14 Pro / 15 Pro — Dynamic Island extra space */
+@media (min-height:852px) and (orientation:portrait){
+  .dash-hdr{padding-top:calc(env(safe-area-inset-top)+16px)}
+  .ghdr{padding-top:calc(env(safe-area-inset-top)+16px)}
 }
 </style>
 </head>
