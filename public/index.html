@@ -1,0 +1,2837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>LendTrack Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+/* ══ RESET ══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{touch-action:manipulation}
+
+/* ══ DESIGN TOKENS ══ */
+:root{
+  --pri:#1D4ED8;--pri2:#1E40AF;--pri3:#2563EB;--pri4:#0C1A3A;
+  --sky:#0EA5E9;
+  --grn:#059669;--grn2:#10B981;
+  --amb:#D97706;--amb2:#F59E0B;
+  --red:#DC2626;--red2:#EF4444;
+  --bg:#EFF6FF;--bg2:#DBEAFE;--bg3:#BFDBFE;
+  --txt:#0C1A3A;--txt2:#1E40AF;--txt3:#2563EB;
+  --sh:0 2px 16px rgba(29,78,216,.09),0 1px 4px rgba(0,0,0,.05);
+  --sh2:0 16px 48px rgba(29,78,216,.22);
+  --grad-app:linear-gradient(175deg,#EFF6FF 0%,#DBEAFE 40%,#E0F2FE 70%,#F0F9FF 100%);
+  --grad-hdr:linear-gradient(145deg,#020617 0%,#0C1A3A 20%,#1E3A8A 50%,#1D4ED8 78%,#0EA5E9 100%);
+  --grad-card:linear-gradient(135deg,rgba(255,255,255,.96) 0%,rgba(240,249,255,.92) 100%);
+}
+
+/* ══ ROOT ══ */
+html,body{height:100%;overflow:hidden;background:linear-gradient(160deg,#020617,#0C1A3A,#1E3A8A,#1D4ED8)}
+body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+#root{
+  display:flex;flex-direction:column;
+  width:100%;max-width:430px;margin:0 auto;
+  height:100dvh;
+  background:var(--grad-app);
+  position:relative;overflow:hidden;
+}
+/* Subtle dot-grid texture overlay */
+#root::before{
+  content:'';pointer-events:none;
+  position:absolute;inset:0;z-index:0;
+  background-image:radial-gradient(circle,rgba(29,78,216,.055) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+/* All direct children sit above texture */
+#root>*{position:relative;z-index:1}
+
+/* ══ SCROLL CONTAINER ══ */
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(env(safe-area-inset-bottom)+90px)}
+.screen::-webkit-scrollbar{display:none}
+
+/* ══ BOTTOM NAV ══ */
+.nav{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:8px 12px calc(env(safe-area-inset-bottom)+8px);
+  z-index:50;
+}
+.nav-inner{
+  display:flex;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border:1.5px solid rgba(255,255,255,.99);
+  border-radius:26px;padding:5px;gap:2px;
+  box-shadow:0 10px 40px rgba(29,78,216,.2),0 2px 8px rgba(0,0,0,.07);
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:10px 2px;min-height:52px;
+  background:none;border:none;cursor:pointer;
+  font-size:9.5px;font-weight:600;color:#93C5FD;
+  border-radius:20px;transition:all .2s cubic-bezier(.34,1.56,.64,1);letter-spacing:.02px;
+  font-family:'Inter',sans-serif;
+}
+.nav-btn:not(.active):hover{background:rgba(29,78,216,.06);color:#60A5FA;transform:translateY(-1px)}
+.nav-btn.active{
+  background:linear-gradient(145deg,#0EA5E9,#2563EB,#1D4ED8);
+  color:#fff;
+  box-shadow:0 6px 24px rgba(29,78,216,.45),0 2px 6px rgba(14,165,233,.3);
+  font-weight:800;
+  transform:translateY(-1px);
+}
+
+/* ══ GRADIENT HEADER (shared — Borrowers / Add / Summary) ══ */
+.ghdr{
+  background:var(--grad-hdr);
+  padding:calc(env(safe-area-inset-top)+14px) 14px 14px;
+  position:sticky;top:0;z-index:40;overflow:hidden;
+  box-shadow:0 4px 20px rgba(12,26,58,.35);
+}
+.ghdr::before{
+  content:'';position:absolute;top:-60px;right:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.22) 0%,transparent 62%);
+  pointer-events:none;
+}
+/* ── Frosted pill inside header (same as dashboard) ── */
+.ghdr-pill{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px 18px 0 0;
+  padding:8px 10px 12px 8px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  position:relative;z-index:1;
+}
+.ghdr-pill-left{display:flex;align-items:center;gap:10px}
+.ghdr-pill-icon{
+  width:38px;height:38px;border-radius:11px;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.28);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;color:#fff;
+}
+.ghdr-pill-title{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.ghdr-pill-badge{
+  font-size:11px;font-weight:700;color:rgba(255,255,255,.9);
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.2);
+  padding:6px 13px;border-radius:99px;
+  white-space:nowrap;
+}
+
+/* ── Hero info card below header ── */
+.ghdr-hero{
+  background:linear-gradient(145deg,#0C1A3A 0%,#1E3A8A 45%,#1D4ED8 80%,#0EA5E9 100%);
+  border-radius:24px;padding:16px 18px 16px;
+  margin:14px 14px 0;
+  position:relative;overflow:hidden;
+  box-shadow:0 12px 40px rgba(29,78,216,.38),0 4px 12px rgba(0,0,0,.18);
+  border:1px solid rgba(56,189,248,.2);
+}
+.ghdr-hero::before{
+  content:'';position:absolute;top:-50px;right:-40px;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.22) 0%,transparent 62%);pointer-events:none;
+}
+.ghdr-hero::after{
+  content:'';position:absolute;bottom:-32px;left:-20px;width:120px;height:120px;border-radius:20px;
+  background:rgba(14,165,233,.1);transform:rotate(28deg);pointer-events:none;
+}
+.ghdr-hero-top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;margin-bottom:14px}
+.ghdr-hero-left{display:flex;flex-direction:column}
+.ghdr-hero-label{font-size:9px;font-weight:700;color:rgba(186,230,253,.5);text-transform:uppercase;letter-spacing:.9px;margin-bottom:4px}
+.ghdr-hero-title{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.4px}
+.ghdr-hero-sub{font-size:11px;color:rgba(186,230,253,.55);font-weight:500;margin-top:3px}
+.ghdr-hero-badge{
+  font-size:10px;font-weight:700;color:#6EE7B7;
+  background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.3);
+  padding:5px 13px;border-radius:99px;flex-shrink:0;
+}
+.ghdr-hero-stats{display:flex;gap:8px;position:relative;z-index:1}
+.ghdr-hero-stat{
+  flex:1;text-align:center;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:13px;padding:10px 6px 9px;
+}
+.ghdr-hero-stat-val{font-size:18px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1}
+.ghdr-hero-stat-lbl{font-size:8px;font-weight:700;color:rgba(186,230,253,.45);text-transform:uppercase;letter-spacing:.45px;margin-top:4px}
+
+/* keep old classes for Add/Summary which still use simple header */
+.ghdr-hdr-row{display:flex;align-items:flex-start;justify-content:space-between;position:relative;z-index:1}
+.ghdr-hdr-left{display:flex;flex-direction:column}
+.ghdr-simple-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.4px}
+.ghdr-simple-sub{font-size:12px;color:rgba(186,230,253,.58);margin-top:4px;font-weight:500}
+.ghdr-badge{
+  font-size:11px;font-weight:700;color:rgba(255,255,255,.9);
+  background:rgba(255,255,255,.12);border:1px solid rgba(56,189,248,.3);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:5px 12px;border-radius:99px;white-space:nowrap;margin-top:2px;
+}
+
+/* ══ SECTION LABEL ══ */
+.sec-lbl{
+  font-size:11px;font-weight:800;
+  background:linear-gradient(90deg,var(--pri3),var(--sky));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-transform:uppercase;letter-spacing:.9px;
+  padding:20px 16px 9px;
+}
+
+/* ══ SEARCH ══ */
+.search-wrap{padding:14px 14px 0}
+.search-box{position:relative}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#93C5FD;pointer-events:none}
+.search-input{
+  width:100%;padding:13px 14px 13px 43px;
+  border-radius:16px;
+  border:1.5px solid rgba(29,78,216,.12);
+  background:rgba(255,255,255,.9);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  font-size:16px;font-family:'Inter',sans-serif;
+  color:var(--txt);outline:none;font-weight:500;
+  box-shadow:var(--sh);transition:border-color .2s,box-shadow .2s;
+  -webkit-appearance:none;appearance:none;
+}
+.search-input:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(14,165,233,.14),var(--sh)}
+.search-input::placeholder{color:#93C5FD}
+
+/* ══ FILTERS ══ */
+.filters{display:flex;gap:7px;padding:10px 14px 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.filters::-webkit-scrollbar{display:none}
+.filter-btn{
+  padding:8px 16px;border-radius:99px;font-size:12px;font-weight:700;
+  border:1.5px solid rgba(29,78,216,.13);
+  background:rgba(255,255,255,.87);
+  backdrop-filter:blur(8px);
+  color:#3B82F6;cursor:pointer;white-space:nowrap;
+  transition:all .2s cubic-bezier(.34,1.3,.64,1);font-family:'Inter',sans-serif;flex-shrink:0;
+}
+.filter-btn:hover:not(.on){background:rgba(255,255,255,.97);border-color:rgba(29,78,216,.25);transform:translateY(-1px)}
+.filter-btn.on{
+  background:linear-gradient(135deg,var(--sky),var(--pri3),var(--pri));
+  color:#fff;border-color:transparent;
+  box-shadow:0 5px 18px rgba(29,78,216,.36);
+  transform:translateY(-1px);
+}
+
+/* ══ BORROWER LIST ══ */
+.blist{display:flex;flex-direction:column;gap:9px;padding:0 14px}
+.bcard{
+  background:var(--grad-card);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-radius:22px;
+  box-shadow:var(--sh);cursor:pointer;
+  display:flex;align-items:center;gap:13px;
+  padding:14px 14px 14px 12px;
+  border:1.5px solid rgba(255,255,255,.97);
+  position:relative;overflow:hidden;
+  transition:transform .2s cubic-bezier(.34,1.3,.64,1),box-shadow .2s;
+}
+.bcard:hover{transform:translateY(-2px) scale(1.005);box-shadow:0 10px 36px rgba(29,78,216,.18)}
+.bcard:active{transform:scale(.98);box-shadow:var(--sh2)}
+.bcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:3px 0 0 3px}
+.bcard.sp::before{background:linear-gradient(180deg,#6EE7B7,#10B981,#059669)}
+.bcard.sr::before{background:linear-gradient(180deg,#7DD3FC,#38BDF8,#0EA5E9)}
+.bcard.sn::before{background:linear-gradient(180deg,#FDE68A,#F59E0B,#D97706)}
+.bcard.sc::before{background:linear-gradient(180deg,#FCA5A5,#F87171,#DC2626)}
+.bcard.si::before{background:linear-gradient(180deg,#93C5FD,#3B82F6,#1D4ED8)}
+.bcard.sp{box-shadow:var(--sh),inset -2px 0 20px rgba(16,185,129,.04)}
+.bcard.sr{box-shadow:var(--sh),inset -2px 0 20px rgba(14,165,233,.05)}
+.bcard.sn{box-shadow:var(--sh),inset -2px 0 20px rgba(245,158,11,.04)}
+.bcard.sc{box-shadow:var(--sh),inset -2px 0 20px rgba(239,68,68,.04)}
+.bcard.si{box-shadow:var(--sh),inset -2px 0 20px rgba(59,130,246,.05)}
+.bavatar{
+  width:46px;height:46px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:900;color:#fff;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(0,0,0,.2);
+}
+.binfo{flex:1;min-width:0}
+.bname{font-size:14px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bmeta{font-size:11px;color:#94A3B8;margin-top:2px;font-weight:500}
+.bbadge-row{margin-top:6px}
+.bright{text-align:right;flex-shrink:0}
+.bbal{font-size:14px;font-weight:900;color:var(--txt)}
+.bpct{font-size:10px;color:#94A3B8;font-weight:600;margin-top:2px}
+.pbar{width:54px;height:5px;background:var(--bg3);border-radius:99px;overflow:hidden;margin:5px 0 0 auto}
+.pbar-f{height:100%;border-radius:99px;transition:width .6s}
+
+/* ══ BADGE ══ */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px 4px 8px;border-radius:99px;
+  font-size:10px;font-weight:700;letter-spacing:.2px;
+  font-family:'Inter',sans-serif;
+}
+.badge svg{width:10px;height:10px;flex-shrink:0}
+.bp{background:linear-gradient(135deg,#ECFDF5,#D1FAE5);color:#065F46;border:1px solid rgba(16,185,129,.22)}
+.bn{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);color:#92400E;border:1px solid rgba(245,158,11,.22)}
+.br{background:linear-gradient(135deg,#F0F9FF,#E0F2FE);color:#075985;border:1px solid rgba(14,165,233,.25)}
+.bc{background:linear-gradient(135deg,#FFF5F5,#FEE2E2);color:#991B1B;border:1px solid rgba(239,68,68,.22)}
+.bi{background:linear-gradient(135deg,#EFF6FF,#DBEAFE);color:#1E40AF;border:1px solid rgba(29,78,216,.22)}
+
+/* ══ EMPTY STATE ══ */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 30px;text-align:center}
+.empty-ico{
+  width:80px;height:80px;
+  background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
+  border-radius:26px;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;
+  box-shadow:0 8px 28px rgba(29,78,216,.14);
+  border:1.5px solid rgba(255,255,255,.97);
+}
+.empty-title{font-size:17px;font-weight:800;color:var(--txt)}
+.empty-sub{font-size:13px;color:#64748B;margin-top:8px;font-weight:500;line-height:1.6}
+
+/* ══ FORM ══ */
+.form-page{padding:14px;display:flex;flex-direction:column;gap:12px}
+.form-card{
+  background:var(--grad-card);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border:1.5px solid rgba(255,255,255,.97);
+  border-radius:26px;box-shadow:var(--sh);
+  padding:20px;display:flex;flex-direction:column;gap:16px;
+}
+.flabel{font-size:11px;font-weight:700;color:#64748B;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;display:block}
+.finput{
+  width:100%;padding:14px 15px;border-radius:13px;
+  border:1.5px solid rgba(109,40,217,.12);
+  background:rgba(248,245,255,.85);
+  font-size:16px;font-family:'Inter',sans-serif;color:var(--txt);
+  outline:none;font-weight:500;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+  -webkit-appearance:none;appearance:none;
+}
+.finput:focus{border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+.finput::placeholder{color:#93C5FD}
+.finput[readonly]{background:var(--bg2);color:#1D4ED8;cursor:default;font-weight:700}
+.peso-wrap{position:relative}
+.peso-sym{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:15px;color:#38BDF8;font-weight:700;pointer-events:none}
+.peso-wrap .finput{padding-left:30px}
+
+.preview-box{
+  background:linear-gradient(135deg,rgba(255,251,235,.96),rgba(254,243,199,.88));
+  border:1.5px solid rgba(253,230,138,.9);
+  border-radius:20px;padding:18px;
+  backdrop-filter:blur(8px);
+}
+.preview-head{font-size:11px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px}
+.preview-row{display:flex;justify-content:space-between;padding:4px 0}
+.preview-row span:first-child{font-size:13px;color:#78350F;font-weight:500}
+.preview-row span:last-child{font-size:13px;color:#78350F;font-weight:800}
+.preview-sep{height:1px;background:rgba(253,230,138,.7);margin:6px 0}
+.preview-total{
+  background:rgba(255,255,255,.65);border-radius:12px;
+  padding:11px 14px;margin-top:10px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.preview-total span:first-child{font-size:12px;color:#92400E;font-weight:600}
+.preview-total span:last-child{font-size:18px;color:#D97706;font-weight:900}
+.err-box{
+  background:linear-gradient(135deg,rgba(255,241,242,.95),rgba(254,205,211,.7));
+  border:1.5px solid #FECDD3;border-radius:14px;
+  padding:13px 15px;font-size:13px;font-weight:600;color:#BE123C;
+  display:flex;align-items:center;gap:9px;
+}
+
+/* ══ BUTTONS ══ */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:15px;border-radius:14px;border:none;cursor:pointer;
+  font-size:15px;font-weight:800;font-family:'Inter',sans-serif;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,opacity .15s;width:100%;
+}
+.btn:hover{opacity:.92;transform:translateY(-1px)}
+.btn:active{transform:scale(.97);opacity:1}
+.btn-p{background:linear-gradient(135deg,var(--sky),var(--pri3),var(--pri));color:#fff;box-shadow:0 6px 22px rgba(29,78,216,.38)}
+.btn-p:hover{box-shadow:0 10px 32px rgba(29,78,216,.52)}
+.btn-g{background:linear-gradient(135deg,var(--grn2),var(--grn));color:#fff;box-shadow:0 6px 18px rgba(5,150,105,.3)}
+.btn-g:hover{box-shadow:0 10px 28px rgba(5,150,105,.45)}
+.btn-r{background:linear-gradient(135deg,var(--red2),var(--red));color:#fff;box-shadow:0 6px 18px rgba(220,38,38,.3)}
+.btn-ghost{background:rgba(29,78,216,.07);color:var(--pri3);font-weight:700;border:1.5px solid rgba(29,78,216,.15)}
+.btn-sm{padding:11px 17px;font-size:13px;width:auto;border-radius:11px}
+
+/* ══ DETAIL HEADER ══ */
+.dhdr{
+  background:var(--grad-hdr);
+  padding:calc(env(safe-area-inset-top)+14px) 14px 14px;
+  position:sticky;top:0;z-index:40;overflow:hidden;
+  box-shadow:0 4px 20px rgba(12,26,58,.35);
+}
+.dhdr::before{
+  content:'';position:absolute;top:-60px;right:-40px;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.22) 0%,transparent 62%);pointer-events:none;
+}
+.dhdr-pill{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px 18px 0 0;
+  padding:8px 10px 12px 8px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  position:relative;z-index:1;
+}
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.28);
+  color:#fff;cursor:pointer;
+  font-size:13px;font-weight:700;font-family:'Inter',sans-serif;
+  padding:8px 14px 8px 10px;border-radius:99px;min-height:38px;
+  transition:background .15s;
+}
+.back-btn:active{background:rgba(255,255,255,.28)}
+.del-btn{
+  background:rgba(255,255,255,.15);
+  border:1.5px solid rgba(255,255,255,.22);
+  border-radius:11px;padding:9px;cursor:pointer;
+  color:rgba(255,255,255,.8);
+  display:flex;align-items:center;justify-content:center;
+  min-width:38px;min-height:38px;
+  transition:background .2s,transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,color .2s,border-color .2s;
+}
+.del-btn:hover{
+  background:rgba(239,68,68,.85);
+  color:#fff;
+  border-color:rgba(239,68,68,.9);
+  transform:scale(1.08);
+  box-shadow:0 4px 18px rgba(239,68,68,.45);
+}
+.del-btn:active{
+  transform:scale(.93);
+  background:#DC2626;
+  box-shadow:0 2px 10px rgba(220,38,38,.5);
+}
+
+/* ══ DETAIL HERO CARD ══ */
+.dhdr-hero{
+  background:linear-gradient(145deg,#0C1A3A 0%,#1E3A8A 45%,#1D4ED8 80%,#0EA5E9 100%);
+  border-radius:24px;padding:18px 18px 0;
+  margin:14px 14px 0;
+  position:relative;overflow:hidden;
+  box-shadow:0 12px 40px rgba(29,78,216,.38),0 4px 12px rgba(0,0,0,.18);
+  border:1px solid rgba(56,189,248,.2);
+}
+.dhdr-hero::before{
+  content:'';position:absolute;top:-50px;right:-40px;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.25) 0%,transparent 62%);pointer-events:none;
+}
+.dhdr-hero::after{
+  content:'';position:absolute;bottom:-32px;left:-20px;width:120px;height:120px;border-radius:20px;
+  background:rgba(14,165,233,.1);transform:rotate(28deg);pointer-events:none;
+}
+.dhdr-hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;position:relative;z-index:1}
+.dhdr-name{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px}
+.dhdr-dates{font-size:11px;color:rgba(186,230,253,.5);font-weight:500;margin-top:3px;margin-bottom:12px;position:relative;z-index:1}
+.dhdr-badges{display:flex;align-items:center;gap:8px;margin-bottom:14px;position:relative;z-index:1}
+.pct-chip{
+  font-size:10px;font-weight:800;color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);
+  padding:4px 11px;border-radius:99px;
+}
+
+/* ══ QUICK STATS — inside hero card ══ */
+.qstats{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid rgba(255,255,255,.1);
+  position:relative;z-index:1;margin:0 -18px;
+}
+.qstat{padding:12px 4px;text-align:center;border-right:1px solid rgba(255,255,255,.08)}
+.qstat:last-child{border:none}
+.qstat-lbl{font-size:8px;font-weight:700;color:rgba(186,230,253,.48);text-transform:uppercase;letter-spacing:.5px}
+.qstat-val{font-size:12px;font-weight:900;margin-top:3px}
+.qstat-val.g{color:#6EE7B7}
+.qstat-val.r{color:#FCA5A5}
+.qstat-val.y{color:#FCD34D}
+.qstat-val.w{color:#BAE6FD}
+
+/* ══ LOAN INFO BAR — now a card below hero ══ */
+.loan-bar{
+  display:flex;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(16px);
+  border-radius:20px;
+  margin:10px 14px 0;
+  border:1.5px solid rgba(255,255,255,.97);
+  box-shadow:0 4px 16px rgba(29,78,216,.1);
+  overflow:hidden;
+}
+.loan-bar-item{flex:1;padding:14px 12px;border-right:1px solid rgba(29,78,216,.07)}
+.loan-bar-item:last-child{border:none}
+.loan-bar-lbl{font-size:9px;font-weight:700;color:#38BDF8;text-transform:uppercase;letter-spacing:.5px}
+.loan-bar-val{font-size:15px;font-weight:900;margin-top:4px;letter-spacing:-.3px}
+
+/* ══ DAY GRID ══ */
+.dgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding:8px 14px 12px}
+.dcell{
+  border-radius:14px;padding:9px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  cursor:pointer;transition:transform .12s;
+  border:1.5px solid transparent;
+}
+.dcell:active{transform:scale(.88)}
+.dcell.dg{background:linear-gradient(145deg,rgba(209,250,229,.9),rgba(167,243,208,.65));border-color:rgba(52,211,153,.4)}
+.dcell.dr{background:linear-gradient(145deg,rgba(254,226,226,.9),rgba(252,165,165,.5));border-color:rgba(248,113,113,.35)}
+.dcell.dn{background:rgba(255,255,255,.72);border-color:rgba(109,40,217,.07)}
+.dnum{font-size:8px;font-weight:800;color:#94A3B8}
+.ddate{font-size:10px;font-weight:700;color:var(--txt)}
+.dpay{font-size:9px;font-weight:900;margin-top:1px}
+.dcell.dg .dnum{color:#059669}
+.dcell.dr .dnum{color:#DC2626}
+.dcell.dg .ddate{color:#065F46}
+.dcell.dr .ddate{color:#7F1D1D}
+.dcell.dg .dpay{color:#059669}
+.dcell.dr .dpay{color:#B91C1C}
+.dcell.dn .dpay{color:#94A3B8}
+
+/* ══ RENEW SECTION ══ */
+.renew-card{
+  margin:0 14px 14px;
+  background:linear-gradient(135deg,rgba(255,251,235,.96),rgba(254,243,199,.82));
+  border:1.5px solid rgba(253,230,138,.85);
+  border-radius:20px;padding:17px;
+  backdrop-filter:blur(8px);
+}
+.renew-card-head{font-size:10px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.renew-card-amt{font-size:22px;font-weight:900;color:#78350F;margin-bottom:13px}
+.renew-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.renew-date-row{margin-bottom:4px}
+.renew-note{font-size:11px;color:#92400E;font-weight:600;margin-top:5px}
+.renew-status-box{
+  margin-top:10px;padding:9px 13px;
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(253,230,138,.6);
+  border-radius:11px;font-size:12px;color:#78350F;font-weight:600;line-height:1.6;
+}
+
+/* ══ LOAN HISTORY ══ */
+.hist-list{display:flex;flex-direction:column;gap:12px;padding:0 14px}
+.hist-card{
+  border-radius:22px;overflow:hidden;cursor:pointer;
+  box-shadow:0 8px 28px rgba(29,78,216,.18),0 2px 8px rgba(0,0,0,.08);
+  transition:transform .22s cubic-bezier(.34,1.3,.64,1),box-shadow .22s;
+  border:1px solid rgba(56,189,248,.18);
+}
+.hist-card:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(29,78,216,.28)}
+.hist-card:active{transform:scale(.98)}
+
+/* gradient header strip */
+.hist-card-hdr{
+  background:linear-gradient(135deg,#0C1A3A 0%,#1E3A8A 50%,#1D4ED8 85%,#0EA5E9 100%);
+  padding:14px 16px;
+  display:flex;justify-content:space-between;align-items:center;
+  position:relative;overflow:hidden;
+}
+.hist-card-hdr::before{
+  content:'';position:absolute;top:-30px;right:-20px;width:100px;height:100px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.22) 0%,transparent 65%);pointer-events:none;
+}
+.hist-card-cycle-wrap{display:flex;align-items:center;gap:8px}
+.hist-card-cycle-icon{
+  width:30px;height:30px;border-radius:9px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.hist-card-cycle{font-size:13px;font-weight:900;color:#fff;letter-spacing:-.2px}
+.hist-card-date{
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  padding:4px 10px;border-radius:99px;white-space:nowrap;
+}
+
+/* body */
+.hist-card-body{
+  background:rgba(255,255,255,.93);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  padding:14px 16px;display:flex;flex-direction:column;gap:0;
+}
+
+/* 3 stat boxes row */
+.hist-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.hist-stat{
+  background:var(--bg);border-radius:13px;
+  padding:10px 8px;text-align:center;
+  border:1px solid rgba(29,78,216,.07);
+}
+.hist-stat-lbl{font-size:8px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.5px}
+.hist-stat-val{font-size:14px;font-weight:900;margin-top:4px;letter-spacing:-.3px}
+
+/* detail rows */
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(29,78,216,.055)}
+.hist-row:last-child{border:none}
+.hist-row-lbl{font-size:12px;color:#64748B;font-weight:500;display:flex;align-items:center;gap:6px}
+.hist-row-lbl-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.hist-row-val{font-size:13px;font-weight:800;color:var(--txt)}
+.hist-divider{height:1px;background:rgba(29,78,216,.07);margin:4px 0}
+
+/* ══ SUMMARY PAGE ══ */
+.sum-wrap{padding:14px;display:flex;flex-direction:column;gap:12px}
+.sum-hero{
+  background:linear-gradient(145deg,#020617 0%,#0C1A3A 18%,#1E3A8A 50%,#1D4ED8 78%,#0EA5E9 100%);
+  border-radius:26px;padding:22px;
+  box-shadow:0 18px 52px rgba(29,78,216,.5),0 4px 12px rgba(0,0,0,.2);
+  position:relative;overflow:hidden;
+  border:1px solid rgba(56,189,248,.2);
+}
+/* glowing circle top-right */
+.sum-hero::before{
+  content:'';position:absolute;top:-60px;right:-40px;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.3) 0%,transparent 60%);pointer-events:none;
+}
+/* rotated rect bottom-left */
+.sum-hero::after{
+  content:'';position:absolute;bottom:-44px;left:-28px;
+  width:160px;height:160px;border-radius:24px;
+  background:rgba(14,165,233,.14);
+  transform:rotate(28deg);pointer-events:none;
+}
+.sum-hero-lbl{font-size:10px;font-weight:800;color:rgba(186,230,253,.45);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;position:relative;z-index:1}
+.sum-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;position:relative;z-index:1}
+.sum-kpi-lbl{font-size:9px;color:rgba(186,230,253,.38);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sum-kpi-val{font-size:20px;font-weight:900;margin-top:4px;letter-spacing:-.4px}
+.sum-rate{margin-top:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.08);position:relative;z-index:1}
+.sum-rate-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.sum-rate-lbl{font-size:11px;color:rgba(186,230,253,.4);font-weight:600}
+.sum-rate-val{font-size:14px;font-weight:900;color:#6EE7B7}
+.sum-rate-track{height:8px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
+.sum-rate-fill{height:100%;background:linear-gradient(90deg,#059669,#10B981,#6EE7B7);border-radius:99px;transition:width .9s}
+
+.scard{
+  background:var(--grad-card);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1.5px solid rgba(255,255,255,.97);
+  border-radius:22px;box-shadow:var(--sh);overflow:hidden;
+  transition:box-shadow .2s;
+}
+.scard:hover{box-shadow:0 8px 28px rgba(29,78,216,.14)}
+.scard-title{
+  padding:15px 17px 11px;font-size:13px;font-weight:800;
+  background:linear-gradient(90deg,var(--pri3),var(--sky));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  border-bottom:1px solid rgba(29,78,216,.07);
+}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:13px 17px;border-bottom:1px solid rgba(29,78,216,.06)}
+.srow:last-child{border:none}
+.srow-left{display:flex;align-items:center;gap:11px}
+.sdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.srow-lbl{font-size:13px;font-weight:600;color:var(--txt)}
+.srow-count{font-size:18px;font-weight:900}
+.irow{display:flex;justify-content:space-between;align-items:center;padding:13px 17px;border-bottom:1px solid rgba(29,78,216,.06)}
+.irow:last-child{border:none}
+.irow-name{font-size:13px;font-weight:700;color:var(--txt)}
+.irow-status{margin-top:4px}
+.irow-val{font-size:16px;font-weight:900;text-align:right;background:linear-gradient(135deg,#F59E0B,#D97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.irow-pct{font-size:10px;color:#94A3B8;font-weight:600;text-align:right;margin-top:2px}
+.act-btn{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:15px;border-radius:15px;border:none;cursor:pointer;
+  font-size:14px;font-weight:700;font-family:'Inter',sans-serif;
+  transition:transform .15s;width:100%;
+}
+.act-btn:active{transform:scale(.97)}
+.act-export{
+  background:rgba(255,255,255,.9);color:var(--txt);
+  border:1.5px solid rgba(109,40,217,.15);
+  box-shadow:var(--sh);backdrop-filter:blur(12px);
+}
+.act-clear{
+  background:linear-gradient(135deg,rgba(255,241,242,.95),rgba(254,205,211,.75));
+  color:#BE123C;border:1.5px solid #FECDD3;
+}
+
+/* ══ MODAL ══ */
+.overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(4,6,20,.4);
+  display:flex;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+  animation:overlayIn .22s ease;
+}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--grad-hdr);
+  border-radius:28px 28px 0 0;
+  padding:0 0 calc(env(safe-area-inset-bottom)+24px);
+  width:100%;max-width:430px;
+  animation:slideUp .32s cubic-bezier(.34,1.2,.64,1);
+  box-shadow:0 -16px 60px rgba(12,26,58,.5);
+  border-top:1.5px solid rgba(56,189,248,.25);
+  position:relative;overflow:hidden;
+}
+.modal::before{
+  content:'';position:absolute;top:-60px;right:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.18) 0%,transparent 65%);
+  pointer-events:none;
+}
+@keyframes slideUp{from{transform:translateY(100%);opacity:.5}to{transform:translateY(0);opacity:1}}
+
+/* modal top pill — same frosted pill as header */
+.modal-pill{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.10);
+  border-bottom:1px solid rgba(255,255,255,.1);
+  padding:20px 16px 14px;
+  position:relative;z-index:1;
+}
+.modal-handle{width:36px;height:4px;background:rgba(255,255,255,.22);border-radius:99px;position:absolute;top:10px;left:50%;transform:translateX(-50%)}
+.modal-pill-title{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.modal-pill-badge{
+  font-size:11px;font-weight:700;color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);
+  padding:5px 12px;border-radius:99px;
+  white-space:nowrap;
+}
+
+/* modal body */
+.modal-body{padding:16px 16px 0;position:relative;z-index:1}
+.modal-sub{font-size:11px;color:rgba(186,230,253,.55);font-weight:500;margin-bottom:14px}
+.modal-row{display:flex;gap:9px}
+.modal-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px}
+
+/* Payment input card */
+.pay-input-wrap{
+  background:rgba(255,255,255,.08);
+  border:1.5px solid rgba(56,189,248,.25);
+  border-radius:18px;padding:16px 18px;
+  margin-bottom:16px;
+}
+.pay-input-lbl{font-size:9px;font-weight:800;color:rgba(186,230,253,.5);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px}
+.pay-input-row{display:flex;align-items:center;gap:8px}
+.pay-currency{font-size:28px;font-weight:900;color:rgba(56,189,248,.75)}
+.pay-field{
+  flex:1;background:transparent;border:none;outline:none;
+  font-size:36px;font-weight:900;color:#fff;letter-spacing:-.8px;
+  font-family:'Inter',sans-serif;width:100%;caret-color:#38BDF8;
+}
+.pay-field::placeholder{color:rgba(255,255,255,.18)}
+.pay-expected{
+  font-size:11px;color:rgba(186,230,253,.48);font-weight:600;
+  margin-top:12px;padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.pay-expected span:last-child{color:#6EE7B7;font-weight:800;font-size:12px}
+
+/* Day badge */
+.modal-day-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(14,165,233,.18);border:1px solid rgba(56,189,248,.28);
+  border-radius:99px;padding:5px 12px;margin-bottom:10px;
+  font-size:11px;font-weight:700;color:#7DD3FC;
+}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;bottom:110px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,rgba(2,6,23,.95),rgba(12,26,58,.92));
+  color:#fff;
+  padding:12px 22px;border-radius:99px;
+  font-size:13px;font-weight:700;font-family:'Inter',sans-serif;
+  z-index:600;white-space:nowrap;
+  box-shadow:0 8px 36px rgba(29,78,216,.32),0 2px 8px rgba(0,0,0,.3);
+  animation:toastA 3s ease forwards;
+  border:1px solid rgba(56,189,248,.22);
+}
+@keyframes toastA{
+  0%{opacity:0;transform:translateX(-50%) translateY(16px)}
+  12%{opacity:1;transform:translateX(-50%) translateY(0)}
+  78%{opacity:1;transform:translateX(-50%) translateY(0)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-10px)}
+}
+.spinner{
+  width:36px;height:36px;
+  border:3px solid rgba(29,78,216,.14);
+  border-top-color:var(--sky);
+  border-radius:50%;animation:spin .7s linear infinite;margin:80px auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ ENTRANCE ANIMATIONS ══ */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.dash-hdr{animation:fadeUp .38s ease both}
+.dash-alert{animation:fadeUp .4s .12s ease both}
+.sec-lbl{animation:fadeUp .4s .15s ease both}
+.dash-qlist{animation:fadeUp .44s .18s ease both}
+
+/* ══ INCOME CHART ══ */
+.chart-wrap{margin:0 14px 4px}
+.chart-card{
+  background:var(--grad-card);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1.5px solid rgba(255,255,255,.97);
+  border-radius:22px;box-shadow:var(--sh);
+  overflow:hidden;
+}
+.chart-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 16px 10px;
+  border-bottom:1px solid rgba(29,78,216,.07);
+}
+.chart-title{
+  font-size:13px;font-weight:800;
+  background:linear-gradient(90deg,var(--pri3),var(--sky));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.chart-badge{
+  font-size:10px;font-weight:700;
+  background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
+  color:#1D4ED8;border:1px solid rgba(29,78,216,.18);
+  padding:3px 9px;border-radius:99px;
+}
+.chart-svg-wrap{padding:8px 12px 12px;position:relative}
+
+/* ══ DASHBOARD ══ */
+.dash-hdr{
+  background:var(--grad-hdr);
+  padding:calc(env(safe-area-inset-top)+14px) 14px 14px;
+  position:sticky;top:0;z-index:40;overflow:hidden;
+  box-shadow:0 4px 20px rgba(12,26,58,.35);
+}
+.dash-hdr::before{
+  content:'';position:absolute;top:-60px;right:-40px;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.22) 0%,transparent 62%);pointer-events:none;
+}
+.dash-hdr-top{position:relative;z-index:1}
+
+/* ══ HERO CARD — standalone dark card in content area ══ */
+.dash-hero-card{
+  background:linear-gradient(145deg,#0C1A3A 0%,#1E3A8A 45%,#1D4ED8 80%,#0EA5E9 100%);
+  border-radius:24px;padding:18px 18px 16px;
+  margin:14px 14px 0;
+  position:relative;overflow:hidden;
+  box-shadow:0 12px 40px rgba(29,78,216,.38),0 4px 12px rgba(0,0,0,.18);
+  border:1px solid rgba(56,189,248,.2);
+}
+.dash-hero-card::before{
+  content:'';position:absolute;top:-50px;right:-40px;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(56,189,248,.25) 0%,transparent 62%);pointer-events:none;
+}
+.dash-hero-card::after{
+  content:'';position:absolute;bottom:-36px;left:-24px;width:140px;height:140px;border-radius:22px;
+  background:rgba(14,165,233,.12);transform:rotate(28deg);pointer-events:none;
+}
+/* top row: icon + labels + status badge */
+.dash-hero-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;position:relative;z-index:1}
+.dash-hero-icon{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(56,189,248,.3),rgba(255,255,255,.12));
+  border:1.5px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(14,165,233,.2);
+}
+.dash-hero-meta{flex:1;min-width:0}
+.dash-hero-role{font-size:9px;font-weight:700;color:rgba(186,230,253,.5);text-transform:uppercase;letter-spacing:.9px}
+.dash-hero-name{font-size:16px;font-weight:900;color:#fff;letter-spacing:-.3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-hero-badge{
+  font-size:10px;font-weight:700;color:#6EE7B7;
+  background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.3);
+  padding:5px 11px;border-radius:99px;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(16,185,129,.18);
+}
+/* middle: greeting + date */
+.dash-hero-greeting{font-size:12px;font-weight:600;color:rgba(186,230,253,.75);margin-bottom:2px;position:relative;z-index:1}
+.dash-hero-date{font-size:11px;color:rgba(186,230,253,.42);font-weight:500;margin-bottom:14px;position:relative;z-index:1}
+/* bottom: 3 stat boxes */
+.dash-hero-stats{display:flex;gap:8px;padding-top:13px;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:1}
+.dash-hero-stat{
+  flex:1;text-align:center;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:13px;padding:10px 6px 9px;
+}
+.dash-hero-stat-val{font-size:17px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1}
+.dash-hero-stat-lbl{font-size:8px;font-weight:700;color:rgba(186,230,253,.45);text-transform:uppercase;letter-spacing:.45px;margin-top:4px}
+
+/* Rate bar — inside hero card */
+.dash-rate{margin-top:12px;position:relative;z-index:1}
+.dash-rate-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dash-rate-lbl{font-size:10px;color:rgba(186,230,253,.45);font-weight:600}
+.dash-rate-val{font-size:11px;font-weight:800;color:#6EE7B7}
+.dash-rate-track{height:6px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
+.dash-rate-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#047857,#10B981,#6EE7B7);transition:width 1s cubic-bezier(.34,1,.64,1)}
+
+/* ══ ALERT CARD (reference: orange overdue style) ══ */
+.dash-alert{
+  margin:14px 14px 0;
+  background:#FFFBF0;
+  border:1.5px solid rgba(251,191,36,.4);
+  border-radius:18px;padding:13px 14px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 4px 18px rgba(245,158,11,.1);
+}
+.dash-alert-icon{
+  width:40px;height:40px;border-radius:12px;
+  background:linear-gradient(135deg,#FEF3C7,#FDE68A);
+  border:1px solid rgba(251,191,36,.3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(245,158,11,.18);
+}
+.dash-alert-text{flex:1;min-width:0}
+.dash-alert-title{font-size:13px;font-weight:800;color:#92400E}
+.dash-alert-sub{font-size:11px;color:#B45309;font-weight:500;margin-top:2px}
+.dash-alert-end{flex-shrink:0;color:#F59E0B}
+
+/* ══ QUICK-ACCESS VERTICAL LIST (reference: white card style) ══ */
+.dash-qlist{display:flex;flex-direction:column;gap:9px;padding:0 14px}
+.dash-qcard{
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 2px 14px rgba(29,78,216,.08),0 1px 3px rgba(0,0,0,.04);
+  border:1.5px solid rgba(241,245,249,.97);
+  display:flex;align-items:center;gap:13px;
+  padding:13px 14px 13px 0;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .2s cubic-bezier(.34,1.3,.64,1),box-shadow .2s;
+}
+.dash-qcard:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(29,78,216,.14)}
+.dash-qcard:active{transform:scale(.98)}
+/* left colored stripe */
+.dash-qcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.dash-qcard.sp::before{background:linear-gradient(180deg,#6EE7B7,#059669)}
+.dash-qcard.sr::before{background:linear-gradient(180deg,#7DD3FC,#0EA5E9)}
+.dash-qcard.sn::before{background:linear-gradient(180deg,#FCD34D,#D97706)}
+.dash-qcard.sc::before{background:linear-gradient(180deg,#FCA5A5,#DC2626)}
+.dash-qcard.si::before{background:linear-gradient(180deg,#93C5FD,#1D4ED8)}
+.dash-qcard-icon{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:900;color:#fff;
+  margin-left:14px;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);
+}
+.dash-qcard-info{flex:1;min-width:0}
+.dash-qcard-name{font-size:14px;font-weight:800;color:#0C1A3A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-qcard-meta{font-size:11px;color:#94A3B8;font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-qcard-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;padding-right:4px}
+.dash-qcard-amt{font-size:14px;font-weight:900;color:#0C1A3A;letter-spacing:-.2px}
+.dash-qcard-chevron{color:#CBD5E1;display:flex;align-items:center}
+
+/* ══ KPI SUMMARY CARDS ══ */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 0}
+.kpi-card{
+  border-radius:20px;padding:16px 15px;
+  position:relative;overflow:hidden;
+  transition:transform .22s cubic-bezier(.34,1.3,.64,1),box-shadow .22s;
+  cursor:default;border:1.5px solid rgba(255,255,255,.88);
+}
+.kpi-card:hover{transform:translateY(-3px) scale(1.015)}
+.kpi-card::after{content:'';position:absolute;bottom:-22px;right:-22px;width:84px;height:84px;border-radius:50%;background:currentColor;opacity:.09;pointer-events:none}
+.kpi-card-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:11px;flex-shrink:0}
+.kpi-card-val{font-size:24px;font-weight:900;letter-spacing:-.6px;line-height:1;display:block}
+.kpi-card-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.65px;margin-top:5px;display:block;opacity:.7}
+.kpi-card-sub{font-size:10px;font-weight:600;margin-top:7px;display:flex;align-items:center;gap:4px;opacity:.8}
+.kpi-blue{background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);color:#1D4ED8;box-shadow:0 6px 22px rgba(29,78,216,.14)}
+.kpi-green{background:linear-gradient(135deg,#ECFDF5 0%,#D1FAE5 100%);color:#059669;box-shadow:0 6px 22px rgba(5,150,105,.14)}
+.kpi-amber{background:linear-gradient(135deg,#FFFBEB 0%,#FEF3C7 100%);color:#D97706;box-shadow:0 6px 22px rgba(217,119,6,.14)}
+.kpi-red{background:linear-gradient(135deg,#FFF5F5 0%,#FEE2E2 100%);color:#DC2626;box-shadow:0 6px 22px rgba(220,38,38,.12)}
+.kpi-blue .kpi-card-icon{background:rgba(29,78,216,.12)}
+.kpi-green .kpi-card-icon{background:rgba(5,150,105,.12)}
+.kpi-amber .kpi-card-icon{background:rgba(217,119,6,.12)}
+.kpi-red .kpi-card-icon{background:rgba(220,38,38,.12)}
+@keyframes fadeScale{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.kpi-card:nth-child(1){animation:fadeScale .38s .05s ease both}
+.kpi-card:nth-child(2){animation:fadeScale .38s .10s ease both}
+.kpi-card:nth-child(3){animation:fadeScale .38s .15s ease both}
+.kpi-card:nth-child(4){animation:fadeScale .38s .20s ease both}
+
+/* ══ PROFILE AVATAR ══ */
+.profile-av{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,rgba(139,92,246,.32),rgba(56,189,248,.26));
+  border:1.5px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+  box-shadow:0 3px 12px rgba(56,189,248,.2);
+  transition:transform .18s,background .18s;
+}
+.profile-av:hover{transform:scale(1.08)}
+.profile-av:active{transform:scale(.93)}
+.profile-av-txt{font-size:15px;font-weight:900;color:#fff;letter-spacing:-.2px;pointer-events:none}
+
+/* ══ VIEW TOGGLE ══ */
+.view-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 0}
+.view-bar-left{font-size:11px;font-weight:700;color:#64748B}
+.view-toggle{display:flex;gap:4px;background:rgba(255,255,255,.7);border:1.5px solid rgba(29,78,216,.1);border-radius:12px;padding:3px}
+.vtog-btn{
+  padding:6px 12px;border-radius:9px;font-size:11px;font-weight:700;
+  border:none;background:transparent;color:#64748B;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all .18s cubic-bezier(.34,1.3,.64,1);
+}
+.vtog-btn.on{background:linear-gradient(135deg,var(--sky),var(--pri3));color:#fff;box-shadow:0 3px 10px rgba(29,78,216,.28)}
+
+/* ══ SORT BAR ══ */
+.sort-bar{display:flex;gap:7px;padding:8px 14px 0;align-items:center}
+.sort-lbl{font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
+.sort-select{
+  flex:1;padding:8px 12px;border-radius:10px;
+  border:1.5px solid rgba(29,78,216,.12);
+  background:rgba(255,255,255,.9);
+  font-size:12px;font-family:'Inter',sans-serif;font-weight:600;color:var(--txt);
+  outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;
+  transition:border-color .2s,box-shadow .2s;
+}
+.sort-select:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(14,165,233,.1)}
+
+/* ══ TABLE VIEW ══ */
+.tbl-outer{padding:0 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(29,78,216,.2) transparent}
+.tbl-outer::-webkit-scrollbar{height:4px}
+.tbl-outer::-webkit-scrollbar-thumb{background:rgba(29,78,216,.25);border-radius:99px}
+.tbl-outer::-webkit-scrollbar-track{background:rgba(29,78,216,.06);border-radius:99px}
+.tbl-shell{background:rgba(255,255,255,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:18px;border:1.5px solid rgba(255,255,255,.97);box-shadow:var(--sh);min-width:600px}
+.tbl{width:100%;border-collapse:collapse;min-width:480px}
+.tbl thead{background:linear-gradient(135deg,#0F172A,#1E3A8A,#1D4ED8)}
+.tbl thead th{
+  padding:11px 13px;font-size:9.5px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.65px;color:rgba(255,255,255,.8);white-space:nowrap;
+  cursor:pointer;border:none;user-select:none;
+  transition:background .15s;
+}
+.tbl thead th:hover{background:rgba(255,255,255,.1)}
+.tbl thead th.sorted{color:#7DD3FC}
+.tbl-sort-ico{display:inline-block;margin-left:4px;opacity:.55;font-size:9px;font-style:normal}
+.tbl thead th.sorted .tbl-sort-ico{opacity:1}
+.tbl tbody tr{cursor:pointer;transition:background .12s}
+.tbl tbody tr:hover{background:rgba(219,234,254,.7)}
+.tbl tbody tr:nth-child(even){background:rgba(241,245,249,.55)}
+.tbl tbody tr:nth-child(even):hover{background:rgba(219,234,254,.7)}
+.tbl tbody td{
+  padding:11px 13px;font-size:12px;font-weight:600;color:var(--txt);
+  border-bottom:1px solid rgba(29,78,216,.055);white-space:nowrap;
+}
+.tbl tbody td:first-child{font-weight:800;font-size:13px}
+.tbl tbody tr:last-child td{border-bottom:none}
+
+/* ══ PAGINATION ══ */
+.pager{display:flex;align-items:center;justify-content:center;gap:5px;padding:12px 14px 4px}
+.pager-btn{
+  width:34px;height:34px;border-radius:10px;
+  border:1.5px solid rgba(29,78,216,.12);
+  background:rgba(255,255,255,.87);color:#3B82F6;
+  font-size:12px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;
+  transition:all .18s cubic-bezier(.34,1.3,.64,1);
+}
+.pager-btn:hover:not(:disabled):not(.on){background:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(29,78,216,.14)}
+.pager-btn.on{background:linear-gradient(135deg,var(--sky),var(--pri));color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(29,78,216,.3)}
+.pager-btn:disabled{opacity:.3;cursor:default;pointer-events:none}
+.pager-info{font-size:11px;color:#94A3B8;font-weight:600;padding:0 6px}
+
+/* ══ PRINT BUTTON ══ */
+.print-btn{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:14px;border-radius:14px;border:none;cursor:pointer;
+  font-size:14px;font-weight:700;font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(139,92,246,.09));
+  color:#6D28D9;border:1.5px solid rgba(109,40,217,.2);
+  transition:all .18s;width:100%;
+}
+.print-btn:hover{background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(139,92,246,.16));transform:translateY(-1px)}
+.print-btn:active{transform:scale(.97)}
+
+/* ══ PRINT MEDIA ══ */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body,html{background:white!important;overflow:visible!important}
+  #root{max-width:100%!important;height:auto!important;overflow:visible!important;background:white!important}
+  .nav,.toast,.overlay,.modal,.print-btn,.act-clear{display:none!important}
+  .screen{overflow:visible!important;padding-bottom:20px!important}
+  .ghdr,.dash-hdr{background:linear-gradient(135deg,#0F172A,#1E3A8A,#1D4ED8)!important}
+  .sum-hero{background:linear-gradient(135deg,#0F172A,#1D4ED8)!important}
+  .scard,.kpi-card{break-inside:avoid}
+}
+
+/* ══ LANDSCAPE MODE ══ */
+@media (orientation:landscape){
+  /* Full-width layout, no portrait cap */
+  #root{
+    max-width:100%;
+    flex-direction:row;
+  }
+
+  /* Side nav replaces bottom nav */
+  .nav{
+    position:relative;
+    bottom:auto;left:auto;right:auto;
+    width:76px;flex-shrink:0;
+    height:100dvh;
+    padding:calc(env(safe-area-inset-top)+12px) 8px calc(env(safe-area-inset-bottom)+12px);
+    display:flex;align-items:stretch;
+    border-right:1px solid rgba(56,189,248,.14);
+    background:linear-gradient(180deg,#020617,#0C1A3A,#1E3A8A,#1D4ED8,#0EA5E9);
+  }
+  .nav-inner{
+    flex-direction:column;
+    width:100%;
+    border-radius:18px;
+    padding:6px;gap:4px;
+    justify-content:flex-start;
+  }
+  .nav-btn{
+    flex:none;
+    padding:11px 6px;
+    border-radius:14px;
+    font-size:9px;
+  }
+
+  /* Screen fills remaining space */
+  .screen{
+    flex:1;
+    padding-bottom:0;
+    padding-right:env(safe-area-inset-right);
+  }
+
+  /* Compact headers */
+  .ghdr{
+    padding:calc(env(safe-area-inset-top)+10px) 16px 14px;
+  }
+  .dhdr{
+    padding:calc(env(safe-area-inset-top)+10px) 12px 10px;
+  }
+  .dhdr-hero{margin:10px 12px 0}
+
+  /* Day grid — more columns */
+  .dgrid{grid-template-columns:repeat(10,1fr);gap:5px;padding:6px 12px 10px}
+
+  /* Renew card */
+  .renew-card{margin:0 12px 12px}
+
+  /* Summary kpi grid */
+  .sum-kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .sum-kpi-val{font-size:16px}
+  .sum-wrap{padding:10px;gap:10px}
+
+  /* KPI cards landscape */
+  .kpi-grid{grid-template-columns:repeat(4,1fr);padding:10px 12px 0}
+  .kpi-card-val{font-size:18px}
+  .kpi-card{padding:13px 12px}
+
+  /* Compact modals in landscape */
+  .modal{border-radius:20px 20px 0 0;padding:16px 18px calc(env(safe-area-inset-bottom)+20px)}
+  .modal-title{font-size:17px}
+
+  /* Toast position */
+  .toast{bottom:20px}
+
+  /* Section label */
+  .sec-lbl{padding:14px 14px 7px}
+
+  /* Borrower card compact */
+  .bcard{padding:11px 12px 11px 10px}
+  .bavatar{width:40px;height:40px;border-radius:12px;font-size:13px}
+  .bname{font-size:13px}
+
+  /* Dashboard compact in landscape */
+  .dash-hdr{padding:calc(env(safe-area-inset-top)+10px) 14px 10px}
+  .dash-hero-card{margin:10px 12px 0}
+  .dash-rate{margin-top:8px}
+  .dash-hero-stats{gap:6px}
+  .dash-hero-stat{padding:8px 4px 7px}
+  .dash-hero-stat-val{font-size:14px}
+  .dash-qlist{padding:0 12px}
+  .dash-alert{margin:10px 12px 0}
+}
+
+/* Small phone (iPhone SE, etc) — compact dash header */
+@media (max-height:667px) and (orientation:portrait){
+  .dash-hdr{padding:calc(env(safe-area-inset-top)+10px) 14px 10px}
+  .dash-hero-card{margin:10px 12px 0;padding:14px 14px 12px}
+  .dash-hero-stat-val{font-size:14px}
+  .dash-rate{margin-top:8px}
+}
+
+/* Wide landscape (tablet) */
+@media (orientation:landscape) and (min-width:900px){
+  .nav{width:90px}
+  .nav-btn{font-size:10px}
+  .dgrid{grid-template-columns:repeat(10,1fr)}
+  .sum-kpi-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo}=React;
+
+/* ── Storage ── */
+const db={
+  get:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
+  del:k=>{try{localStorage.removeItem(k)}catch{}},
+};
+
+/* ── Utils ── */
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fmtS=d=>{if(!d)return'—';const x=new Date(d);return`${x.getMonth()+1}/${x.getDate()}`};
+const fmtF=d=>{if(!d)return'—';return new Date(d).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})};
+const fmtP=n=>{if(n==null)return'₱0';return'₱'+Number(n).toLocaleString('en-PH',{minimumFractionDigits:0,maximumFractionDigits:0})};
+const t0=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const ini=n=>(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const todayStr=()=>new Date().toLocaleDateString('en-PH',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+const sanitizeAmountInput=v=>{
+  const s=String(v??'').replace(/,/g,'').replace(/[^\d.]/g,'');
+  const dot=s.indexOf('.');
+  return dot===-1?s:s.slice(0,dot+1)+s.slice(dot+1).replace(/\./g,'');
+};
+const parseAmount=v=>parseFloat(String(v??'').replace(/,/g,''));
+
+/* ── Business Logic ── */
+function compute(b){
+  const payments=b.payments||Array(30).fill(null);
+  const tc=payments.reduce((s,p)=>s+(p||0),0);
+  const tp=b.loanAmount*1.2;
+  const bal=tp-tc;
+  let prl;
+  if(tc===0)prl='NO PAYMENTS YET';
+  else if(bal<=0)prl=b.loanAmount;
+  else{const s=b.loanAmount-Math.max(0,bal);prl=s>0?s:0}
+  let status;
+  const ra=b.renewAmount;
+  if(ra&&ra>0){
+    if(tc===0||(typeof prl==='number'&&prl===0))status='CANNOT RENEW';
+    else if(bal<=0){status=ra<b.loanAmount?`INVALID - MIN ${fmtP(b.loanAmount)}`:'RENEWED'}
+    else{
+      if(typeof prl==='number'&&ra>prl)status=`INVALID - MAX ${fmtP(prl)}`;
+      else if(ra<b.loanAmount)status=`INVALID - MIN ${fmtP(b.loanAmount)}`;
+      else status='RENEWED';
+    }
+  }else if(bal<=0)status='PAID';
+  else status='NOT YET PAID';
+  let income=0;
+  if(status==='RENEWED')income=b.loanAmount*0.2;
+  else if(tc>b.loanAmount)income=Math.min(tc-b.loanAmount,b.loanAmount*0.2);
+  income+=(b.loanHistory||[]).reduce((s,h)=>s+(h.income||0),0);
+  const dates=Array.from({length:30},(_,i)=>addDays(b.dateOfRelease,4+i));
+  return{...b,payments,tc,tp,bal,prl,status,income,dates};
+}
+
+function sClass(s){
+  if(s==='PAID')return'sp';
+  if(s==='RENEWED')return'sr';
+  if(s==='CANNOT RENEW')return'sc';
+  if(s&&s.startsWith('INVALID'))return'si';
+  return'sn';
+}
+
+const avatarBg={
+  sp:'linear-gradient(135deg,#059669,#10B981)',
+  sr:'linear-gradient(135deg,#0EA5E9,#38BDF8)',
+  sn:'linear-gradient(135deg,#1D4ED8,#2563EB)',
+  sc:'linear-gradient(135deg,#DC2626,#F87171)',
+  si:'linear-gradient(135deg,#1E40AF,#3B82F6)',
+};
+
+/* ── SVG Icons ── */
+const Ico={
+  home:(w=2)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>,
+  add:(w=2)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+  users:(w=2)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+  chart:(w=2)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><polyline points="7 16 11 12 15 16 21 9"/></svg>,
+  back:()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+  trash:()=><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>,
+  search:()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  copy:()=><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>,
+  check:()=><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  clock:()=><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  refresh:()=><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 100 .49-3.51"/></svg>,
+  x:()=><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  warn:()=><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  spark:()=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+};
+
+/* ── Badge ── */
+function Badge({status}){
+  let cls='bn',icon=<>{Ico.clock()}</>;
+  if(status==='PAID'){cls='bp';icon=<>{Ico.check()}</>}
+  else if(status==='RENEWED'){cls='br';icon=<>{Ico.refresh()}</>}
+  else if(status==='CANNOT RENEW'){cls='bc';icon=<>{Ico.x()}</>}
+  else if(status?.startsWith('INVALID')){cls='bi';icon=<>{Ico.warn()}</>}
+  return <span className={`badge ${cls}`}>{icon} {status}</span>;
+}
+
+/* ── Toast ── */
+function Toast({msg,onDone}){
+  useEffect(()=>{const t=setTimeout(onDone,3000);return()=>clearTimeout(t)},[]);
+  return <div className="toast">{msg}</div>;
+}
+
+/* ── Portal ── */
+function Portal({children}){
+  return ReactDOM.createPortal(children,document.body);
+}
+
+/* ── Income Chart (Monthly / Yearly) ── */
+function IncomeChart({borrowers,noMargin}){
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  /* Build month-keyed income map from all borrowers */
+  const {points,totalIncome,multiYear}=useMemo(()=>{
+    const map={}; // key: "YYYY-MM", val: income
+
+    const addIncome=(dateStr,income)=>{
+      if(!dateStr||!income)return;
+      const d=new Date(dateStr);
+      if(isNaN(d))return;
+      const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      map[k]=(map[k]||0)+income;
+    };
+
+    borrowers.forEach(b=>{
+      /* Completed / renewed historical cycles — income locked in on renewedOn date */
+      (b.loanHistory||[]).forEach(h=>{
+        addIncome(h.renewedOn, h.income||0);
+      });
+
+      /* Current active cycle — partial income earned so far, attributed to today */
+      const cb=compute(b);
+      const histIncome=(b.loanHistory||[]).reduce((s,h)=>s+(h.income||0),0);
+      const currentIncome=cb.income-histIncome;
+      if(currentIncome>0){
+        addIncome(new Date().toISOString().slice(0,10), currentIncome);
+      }
+    });
+
+    if(Object.keys(map).length===0)return{points:[],totalIncome:0,multiYear:false};
+
+    /* Sort keys chronologically */
+    const keys=Object.keys(map).sort();
+    const firstYear=parseInt(keys[0].split('-')[0]);
+    const lastYear=parseInt(keys[keys.length-1].split('-')[0]);
+    const multiYear=lastYear>firstYear;
+
+    /* Fill every month between first and last key (no gaps) */
+    const filled=[];
+    const start=new Date(keys[0]+'-01');
+    const end=new Date(keys[keys.length-1]+'-01');
+    const cur=new Date(start);
+    while(cur<=end){
+      const k=`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`;
+      filled.push({key:k,val:map[k]||0,yr:cur.getFullYear(),mo:cur.getMonth()});
+      cur.setMonth(cur.getMonth()+1);
+    }
+
+    const totalIncome=Object.values(map).reduce((s,v)=>s+v,0);
+    return{points:filled,totalIncome,multiYear};
+  },[borrowers]);
+
+  const hasData=points.length>0&&points.some(p=>p.val>0);
+
+  /* Chart geometry */
+  const W=320,H=148,PL=40,PR=10,PT=12,PB=32;
+  const cW=W-PL-PR,cH=H-PT-PB;
+
+  const niceCeil=v=>{
+    if(v<=0)return 1000;
+    const mag=Math.pow(10,Math.floor(Math.log10(v)));
+    const nice=[1,2,2.5,5,10];
+    for(const n of nice)if(Math.ceil(v/(n*mag))*n*mag>=v)return Math.ceil(v/(n*mag))*n*mag;
+    return Math.ceil(v/mag)*mag;
+  };
+
+  const yMax=hasData?niceCeil(Math.max(...points.map(p=>p.val))):1000;
+  const n=points.length;
+  const xOf=i=>PL+(n===1?cW/2:i/(n-1)*cW);
+  const yOf=v=>PT+cH-(v/yMax)*cH;
+
+  const pts=points.map((p,i)=>({x:xOf(i),y:yOf(p.val),v:p.val,key:p.key,yr:p.yr,mo:p.mo}));
+
+  function smoothPath(ps){
+    if(ps.length<2)return'';
+    let d=`M${ps[0].x},${ps[0].y}`;
+    for(let i=1;i<ps.length;i++){
+      const a=ps[i-1],b=ps[i];
+      const cpx=(a.x+b.x)/2;
+      d+=` C${cpx},${a.y} ${cpx},${b.y} ${b.x},${b.y}`;
+    }
+    return d;
+  }
+
+  const linePath=n>=2?smoothPath(pts):'';
+  const lastPt=pts[pts.length-1];
+  const firstPt=pts[0];
+  const areaPath=n>=2
+    ?linePath+` L${lastPt.x},${PT+cH} L${firstPt.x},${PT+cH} Z`
+    :'';
+
+  const yTicks=[0,1,2,3,4].map(i=>({val:Math.round(yMax/4*i),y:yOf(yMax/4*i)}));
+
+  /* X-axis: pick up to 6 evenly spaced labels */
+  const maxLabels=Math.min(6,n);
+  const step=n<=1?1:Math.ceil((n-1)/(maxLabels-1));
+  const xLabels=[];
+  for(let i=0;i<n;i+=step)xLabels.push(pts[i]);
+  if(n>1&&xLabels[xLabels.length-1]!==pts[n-1])xLabels.push(pts[n-1]);
+
+  const fmtXLabel=p=>{
+    if(multiYear)return`${MONTHS[p.mo].slice(0,3)} '${String(p.yr).slice(2)}`;
+    return MONTHS[p.mo];
+  };
+  const fmtY=v=>v>=1000?`${(v/1000).toFixed(v%1000===0?0:1)}k`:v;
+
+  if(!hasData){
+    return(
+      <div className="chart-wrap" style={noMargin?{margin:0}:{}}>
+        <div className="chart-card">
+          <div className="chart-hdr">
+            <span className="chart-title">Income Over Time</span>
+            <span className="chart-badge">No data yet</span>
+          </div>
+          <div style={{textAlign:'center',padding:'32px 0',fontSize:12,color:'#93C5FD',fontWeight:600}}>
+            Complete or renew a loan to see income history
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div className="chart-wrap" style={noMargin?{margin:0}:{}}>
+      <div className="chart-card">
+        <div className="chart-hdr">
+          <span className="chart-title">Income Over Time</span>
+          <span className="chart-badge">Total {fmtP(totalIncome)}</span>
+        </div>
+
+        {/* Tab row — month / year toggle hint (visual only, data auto-scales) */}
+        <div style={{display:'flex',gap:6,padding:'6px 14px 0',fontSize:10,fontWeight:700}}>
+          <span style={{color:'#1D4ED8',background:'#EFF6FF',border:'1px solid #BFDBFE',padding:'3px 10px',borderRadius:99}}>
+            {multiYear?'Monthly by Year':'Monthly'}
+          </span>
+          <span style={{color:'#64748B',padding:'3px 6px'}}>
+            {points.length} {points.length===1?'month':'months'} of data
+          </span>
+        </div>
+
+        <div className="chart-svg-wrap">
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:'block',overflow:'visible'}}>
+            <defs>
+              <linearGradient id="igFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0EA5E9" stopOpacity=".35"/>
+                <stop offset="70%" stopColor="#38BDF8" stopOpacity=".07"/>
+                <stop offset="100%" stopColor="#0EA5E9" stopOpacity="0"/>
+              </linearGradient>
+              <filter id="igShadow" x="-20%" y="-30%" width="140%" height="160%">
+                <feDropShadow dx="0" dy="2" stdDeviation="3.5" floodColor="#0EA5E9" floodOpacity=".38"/>
+              </filter>
+            </defs>
+
+            {/* Horizontal grid lines */}
+            {yTicks.map((t,i)=>(
+              <g key={i}>
+                <line x1={PL} y1={t.y} x2={W-PR} y2={t.y}
+                  stroke={i===0?'rgba(29,78,216,.15)':'rgba(29,78,216,.07)'}
+                  strokeWidth={i===0?1.2:.7}
+                  strokeDasharray={i===0?'0':'4 3'}/>
+                <text x={PL-4} y={t.y+3.5} textAnchor="end"
+                  fontSize="7.5" fontFamily="Inter,sans-serif" fontWeight="700" fill="#64748B">
+                  {fmtY(t.val)}
+                </text>
+              </g>
+            ))}
+
+            {/* Area fill */}
+            {n>=2&&<path d={areaPath} fill="url(#igFill)"/>}
+
+            {/* Line */}
+            {n>=2&&(
+              <path d={linePath} fill="none" stroke="#0EA5E9" strokeWidth="2.4"
+                strokeLinejoin="round" strokeLinecap="round" filter="url(#igShadow)"/>
+            )}
+
+            {/* Dots — all months */}
+            {pts.map((p,i)=>(
+              <g key={i}>
+                {p.v>0&&<circle cx={p.x} cy={p.y} r="5" fill="#0EA5E9" opacity=".18"/>}
+                <circle cx={p.x} cy={p.y} r={p.v>0?3:2}
+                  fill={p.v>0?'#0EA5E9':'#CBD5E1'}
+                  stroke="#fff" strokeWidth="1.5"/>
+              </g>
+            ))}
+
+            {/* Value labels on top of each dot (only if few points) */}
+            {n<=8&&pts.map((p,i)=>p.v>0&&(
+              <text key={i} x={p.x} y={p.y-8} textAnchor="middle"
+                fontSize="7" fontFamily="Inter,sans-serif" fontWeight="800" fill="#1D4ED8">
+                {fmtP(p.v)}
+              </text>
+            ))}
+
+            {/* X-axis labels */}
+            {xLabels.map((p,i)=>(
+              <text key={i} x={p.x} y={H-6} textAnchor="middle"
+                fontSize="7.5" fontFamily="Inter,sans-serif" fontWeight="700" fill="#64748B">
+                {fmtXLabel(p)}
+              </text>
+            ))}
+
+            {/* Axes */}
+            <line x1={PL} y1={PT} x2={PL} y2={PT+cH} stroke="rgba(29,78,216,.14)" strokeWidth="1"/>
+            <line x1={PL} y1={PT+cH} x2={W-PR} y2={PT+cH} stroke="rgba(29,78,216,.14)" strokeWidth="1"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   SCREEN 1 — DASHBOARD
+══════════════════════════════ */
+function useClock(){
+  const [time,setTime]=useState(()=>{
+    const n=new Date();
+    return n.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true});
+  });
+  useEffect(()=>{
+    const id=setInterval(()=>{
+      const n=new Date();
+      setTime(n.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true}));
+    },1000);
+    return()=>clearInterval(id);
+  },[]);
+  return time;
+}
+
+function Dashboard({borrowers,onSelect}){
+  const list=useMemo(()=>borrowers.map(compute),[borrowers]);
+  const clock=useClock();
+
+  const stats=useMemo(()=>{
+    const now=t0();
+    const active=list.filter(b=>b.status!=='PAID'&&b.status!=='RENEWED');
+    const tp=list.reduce((s,b)=>s+b.tp,0);
+    const tc=list.reduce((s,b)=>s+b.tc,0);
+    const overdue=active.filter(b=>{
+      if(!b.dates||!b.dates[29])return false;
+      const lastDay=new Date(b.dates[29]);lastDay.setHours(0,0,0,0);
+      return now>lastDay&&b.bal>0;
+    });
+    return{
+      active:active.length,
+      lent:active.reduce((s,b)=>s+b.loanAmount,0),
+      collected:tc,
+      balance:list.reduce((s,b)=>s+Math.max(0,b.bal),0),
+      income:list.reduce((s,b)=>s+b.income,0),
+      rate:tp>0?Math.min(100,Math.round(tc/tp*100)):0,
+      overdue:overdue.length,
+    };
+  },[list]);
+
+  const hour=new Date().getHours();
+  const greeting=hour<12?'Good morning ☀️':hour<18?'Good afternoon 👋':'Good evening 🌙';
+
+  const recent=useMemo(()=>[...list].sort((a,b)=>new Date(b.dateOfRelease)-new Date(a.dateOfRelease)).slice(0,10),[list]);
+
+  return(
+    <div className="screen">
+      {/* ── Gradient Header ── */}
+      <div className="dash-hdr">
+
+        {/* Top bar: frosted pill floating inside header */}
+        <div className="dash-hdr-top">
+          <div style={{
+            display:'flex',alignItems:'center',justifyContent:'space-between',
+            width:'100%',
+            background:'rgba(255,255,255,.10)',
+            border:'1px solid rgba(255,255,255,.18)',
+            borderRadius:'18px 18px 0 0',
+            padding:'8px 10px 12px 8px',
+            backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)',
+            position:'relative',zIndex:1,
+          }}>
+            {/* Left: icon + label */}
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{
+                width:38,height:38,borderRadius:11,
+                background:'rgba(255,255,255,.18)',
+                border:'1px solid rgba(255,255,255,.28)',
+                display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
+                color:'#fff',
+              }}>
+                {Ico.home(2)}
+              </div>
+              <span style={{fontSize:17,fontWeight:800,color:'#fff',letterSpacing:'-.2px'}}>Dashboard</span>
+            </div>
+            {/* Right: clock chip */}
+            <div style={{
+              display:'flex',alignItems:'center',gap:6,
+              background:'rgba(255,255,255,.13)',
+              border:'1px solid rgba(255,255,255,.2)',
+              borderRadius:99,padding:'6px 13px 6px 10px',
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,.9)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,.9)',letterSpacing:.2,whiteSpace:'nowrap'}}>{clock}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Hero Card (outside sticky header, on light bg) ── */}
+      <div className="dash-hero-card">
+        {/* Row 1: icon + role/name + status badge */}
+        <div className="dash-hero-top">
+          <div className="dash-hero-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+          </div>
+          <div className="dash-hero-meta">
+            <div className="dash-hero-role">Lending Portfolio</div>
+            <div className="dash-hero-name">LendTrack Pro</div>
+          </div>
+          <div className="dash-hero-badge">{stats.active>0?`${stats.active} Active`:'No Loans'}</div>
+        </div>
+
+        {/* Row 2: greeting + date */}
+        <div className="dash-hero-greeting">{greeting}, Lender</div>
+        <div className="dash-hero-date">{todayStr()}</div>
+
+        {/* Row 3: 3 stat boxes */}
+        <div className="dash-hero-stats">
+          {[
+            [String(stats.active),'Loans'],
+            [fmtP(stats.collected),'Collected'],
+            [fmtP(stats.balance),'Balance'],
+          ].map(([v,l])=>(
+            <div className="dash-hero-stat" key={l}>
+              <div className="dash-hero-stat-val">{v}</div>
+              <div className="dash-hero-stat-lbl">{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Collection rate bar inside hero card */}
+        <div className="dash-rate">
+          <div className="dash-rate-row">
+            <span className="dash-rate-lbl">Overall Collection Rate</span>
+            <span className="dash-rate-val">{stats.rate}%</span>
+          </div>
+          <div className="dash-rate-track"><div className="dash-rate-fill" style={{width:`${stats.rate}%`}}/></div>
+        </div>
+      </div>
+
+      {/* ── KPI Summary Cards ── */}
+      <div className="kpi-grid">
+        {/* 1 — Total Income (profit earned) */}
+        <div className="kpi-card kpi-amber">
+          <div className="kpi-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <span className="kpi-card-val" style={{fontSize:stats.income>=100000?17:stats.income>=10000?20:24}}>{fmtP(stats.income)}</span>
+          <span className="kpi-card-lbl">Total Income</span>
+          <div className="kpi-card-sub">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            profit earned
+          </div>
+        </div>
+        {/* 2 — Total Lent (capital deployed) */}
+        <div className="kpi-card kpi-blue">
+          <div className="kpi-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <span className="kpi-card-val" style={{fontSize:stats.lent>=100000?17:stats.lent>=10000?20:24}}>{fmtP(stats.lent)}</span>
+          <span className="kpi-card-lbl">Total Lent</span>
+          <div className="kpi-card-sub">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            {stats.active} active
+          </div>
+        </div>
+        {/* 3 — Collected */}
+        <div className="kpi-card kpi-green">
+          <div className="kpi-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/><circle cx="12" cy="12" r="10"/></svg>
+          </div>
+          <span className="kpi-card-val" style={{fontSize:stats.collected>=100000?17:stats.collected>=10000?20:24}}>{fmtP(stats.collected)}</span>
+          <span className="kpi-card-lbl">Collected</span>
+          <div className="kpi-card-sub">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            {stats.rate}% rate
+          </div>
+        </div>
+        {/* 4 — Balance Due */}
+        <div className="kpi-card kpi-red">
+          <div className="kpi-card-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <span className="kpi-card-val" style={{fontSize:stats.balance>=100000?17:stats.balance>=10000?20:24}}>{fmtP(stats.balance)}</span>
+          <span className="kpi-card-lbl">Balance Due</span>
+          <div className="kpi-card-sub">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            outstanding
+          </div>
+        </div>
+      </div>
+
+      {/* ── Overdue alert (orange reference style) ── */}
+      {stats.overdue>0&&(
+        <div className="dash-alert">
+          <div className="dash-alert-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div className="dash-alert-text">
+            <div className="dash-alert-title">{stats.overdue} Overdue Loan{stats.overdue>1?'s':''}</div>
+            <div className="dash-alert-sub">Pending payment for more than 30 days</div>
+          </div>
+          <div className="dash-alert-end">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        </div>
+      )}
+
+      {/* ── Income Chart ── */}
+      {list.length>0&&(
+        <div style={{marginTop:14}}>
+          <IncomeChart borrowers={borrowers}/>
+        </div>
+      )}
+
+      {/* ── Recent Activity — Quick-Access vertical list ── */}
+      {recent.length>0&&(
+        <>
+          <div className="sec-lbl" style={{padding:'14px 14px 10px'}}>Recent Activity</div>
+          <div className="dash-qlist">
+            {recent.map(b=>{
+              const pct=Math.min(100,Math.round(b.tc/b.tp*100));
+              const sc=sClass(b.status);
+              return(
+                <div key={b.id} className={`dash-qcard ${sc}`} onClick={()=>onSelect&&onSelect(b.id)}>
+                  <div className="dash-qcard-icon" style={{background:avatarBg[sc]}}>{ini(b.name)}</div>
+                  <div className="dash-qcard-info">
+                    <div className="dash-qcard-name">{b.name}</div>
+                    <div className="dash-qcard-meta">{fmtP(b.loanAmount)} · Due {fmtF(b.dueDate)}</div>
+                    <div style={{marginTop:5}}><Badge status={b.status}/></div>
+                  </div>
+                  <div className="dash-qcard-right">
+                    <div className="dash-qcard-amt">{fmtP(Math.max(0,b.bal))}</div>
+                    <div style={{fontSize:10,color:'#94A3B8',fontWeight:600}}>{pct}% paid</div>
+                    <div className="dash-qcard-chevron">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {list.length>10&&(
+            <div style={{textAlign:'center',padding:'12px 0 4px',fontSize:11,fontWeight:700,color:'var(--txt3)'}}>
+              +{list.length-10} more — see Borrowers tab
+            </div>
+          )}
+        </>
+      )}
+
+      {list.length===0&&(
+        <div className="empty">
+          <div className="empty-ico">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#lg1)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#38BDF8"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div className="empty-title">Welcome to LendTrack Pro</div>
+          <div className="empty-sub">Tap <strong>+ Add</strong> to record your first borrower and start tracking your lending portfolio.</div>
+        </div>
+      )}
+      <div style={{height:24}}/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   SCREEN 2 — BORROWERS LIST
+══════════════════════════════ */
+const PAGE_SIZE=8;
+
+function BorrowersList({borrowers,onSelect}){
+  const [search,setSearch]=useState('');
+  const [filter,setFilter]=useState('all');
+  const [sortKey,setSortKey]=useState('date');
+  const [sortDir,setSortDir]=useState('desc');
+  const [page,setPage]=useState(1);
+  const list=useMemo(()=>borrowers.map(compute),[borrowers]);
+
+  const filtered=useMemo(()=>{
+    let arr=list.filter(b=>{
+      const ms=!search||b.name.toLowerCase().includes(search.toLowerCase());
+      const mf=filter==='all'?true
+        :filter==='active'?(b.status!=='PAID'&&b.status!=='RENEWED')
+        :filter==='paid'?b.status==='PAID'
+        :b.status==='RENEWED';
+      return ms&&mf;
+    });
+    arr=[...arr].sort((a,b2)=>{
+      let va,vb;
+      if(sortKey==='name'){va=a.name.toLowerCase();vb=b2.name.toLowerCase();return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va)}
+      if(sortKey==='loan'){va=a.loanAmount;vb=b2.loanAmount}
+      else if(sortKey==='balance'){va=Math.max(0,a.bal);vb=Math.max(0,b2.bal)}
+      else if(sortKey==='collected'){va=a.tc;vb=b2.tc}
+      else if(sortKey==='pct'){va=Math.min(100,Math.round(a.tc/a.tp*100));vb=Math.min(100,Math.round(b2.tc/b2.tp*100))}
+      else{va=new Date(a.dateOfRelease);vb=new Date(b2.dateOfRelease)}
+      return sortDir==='asc'?va-vb:vb-va;
+    });
+    return arr;
+  },[list,search,filter,sortKey,sortDir]);
+
+  useEffect(()=>setPage(1),[filtered.length,filter,search]);
+
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));
+  const paginated=filtered.slice((page-1)*PAGE_SIZE,page*PAGE_SIZE);
+
+  return(
+    <div className="screen">
+      {/* ── Thin sticky header bar ── */}
+      <div className="ghdr">
+        <div className="ghdr-pill">
+          <div className="ghdr-pill-left">
+            <div className="ghdr-pill-icon">
+              {Ico.users(2)}
+            </div>
+            <span className="ghdr-pill-title">Borrowers</span>
+          </div>
+          <div className="ghdr-pill-badge">{list.length} Total</div>
+        </div>
+      </div>
+
+      {/* ── Hero info card ── */}
+      <div className="ghdr-hero">
+        <div className="ghdr-hero-top">
+          <div className="ghdr-hero-left">
+            <div className="ghdr-hero-label">Lending Portfolio</div>
+            <div className="ghdr-hero-title">Borrowers</div>
+            <div className="ghdr-hero-sub">{list.filter(b=>b.status!=='PAID'&&b.status!=='RENEWED').length} active · {list.filter(b=>b.status==='PAID'||b.status==='RENEWED').length} done</div>
+          </div>
+          <div className="ghdr-hero-badge">{list.filter(b=>b.status==='PAID'||b.status==='RENEWED').length} Done</div>
+        </div>
+        <div className="ghdr-hero-stats">
+          {[
+            [String(list.length),'Total'],
+            [String(list.filter(b=>b.status!=='PAID'&&b.status!=='RENEWED').length),'Active'],
+            [String(list.filter(b=>b.status==='PAID').length),'Paid'],
+            [String(list.filter(b=>b.status==='RENEWED').length),'Renewed'],
+          ].map(([v,l])=>(
+            <div className="ghdr-hero-stat" key={l}>
+              <div className="ghdr-hero-stat-val">{v}</div>
+              <div className="ghdr-hero-stat-lbl">{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="search-wrap">
+        <div className="search-box">
+          <span className="search-icon">{Ico.search()}</span>
+          <input className="search-input" placeholder="Search borrower…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+      </div>
+
+      <div className="filters">
+        {[['all','All'],['active','Active'],['paid','Paid'],['renewed','Renewed']].map(([v,l])=>(
+          <button key={v} className={`filter-btn${filter===v?' on':''}`} onClick={()=>setFilter(v)}>{l}</button>
+        ))}
+      </div>
+
+      {/* Sort bar */}
+      {filtered.length>1&&(
+        <div className="sort-bar">
+          <span className="sort-lbl">Sort</span>
+          <select className="sort-select" value={sortKey} onChange={e=>setSortKey(e.target.value)}>
+            <option value="date">Date Released</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="loan">Loan Amount</option>
+            <option value="balance">Balance</option>
+            <option value="collected">Collected</option>
+            <option value="pct">% Paid</option>
+          </select>
+          <button className="vtog-btn" style={{background:'rgba(255,255,255,.7)',border:'1.5px solid rgba(29,78,216,.1)',borderRadius:10,padding:'7px 11px'}}
+            onClick={()=>setSortDir(d=>d==='asc'?'desc':'asc')}>
+            {sortDir==='asc'?'↑':'↓'}
+          </button>
+        </div>
+      )}
+
+      {filtered.length===0?(
+        <div className="empty">
+          <div className="empty-ico">
+            {borrowers.length===0
+              ? <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#lg2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#38BDF8"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              : <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#lg3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><defs><linearGradient id="lg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#38BDF8"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            }
+          </div>
+          <div className="empty-title">{borrowers.length===0?'No borrowers yet':'Nothing found'}</div>
+          <div className="empty-sub">{borrowers.length===0?'Tap + Add to create your first borrower record.':'Try adjusting your search or filter.'}</div>
+        </div>
+      ):(
+        <>
+          <div className="blist" style={{paddingTop:10}}>
+            {paginated.map(b=>{
+              const pct=Math.min(100,Math.round(b.tc/b.tp*100));
+              const sc=sClass(b.status);
+              return(
+                <div key={b.id} className={`bcard ${sc}`} onClick={()=>onSelect(b.id)}>
+                  <div className="bavatar" style={{background:avatarBg[sc]}}>{ini(b.name)}</div>
+                  <div className="binfo">
+                    <div className="bname">{b.name}</div>
+                    <div className="bmeta">{fmtP(b.loanAmount)} · Due {fmtF(b.dueDate)}</div>
+                    <div className="bbadge-row"><Badge status={b.status}/></div>
+                  </div>
+                  <div className="bright">
+                    <div className="bbal">{fmtP(Math.max(0,b.bal))}</div>
+                    <div className="bpct">{pct}% paid</div>
+                    <div className="pbar">
+                      <div className="pbar-f" style={{width:`${pct}%`,background:b.status==='PAID'?'#10B981':b.status==='RENEWED'?'#3B82F6':'linear-gradient(90deg,#6D28D9,#7C3AED)'}}/>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {totalPages>1&&(
+            <div className="pager">
+              <button className="pager-btn" disabled={page===1} onClick={()=>setPage(p=>p-1)}>‹</button>
+              {Array.from({length:totalPages},(_,i)=>i+1).map(p=>(
+                <button key={p} className={`pager-btn${page===p?' on':''}`} onClick={()=>setPage(p)}>{p}</button>
+              ))}
+              <button className="pager-btn" disabled={page===totalPages} onClick={()=>setPage(p=>p+1)}>›</button>
+              <span className="pager-info">{(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE,filtered.length)} of {filtered.length}</span>
+            </div>
+          )}
+        </>
+      )}
+      <div style={{height:16}}/>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   SCREEN 3 — ADD BORROWER
+══════════════════════════════ */
+function AddBorrower({onAdd,showToast}){
+  const today=new Date().toISOString().slice(0,10);
+  const [name,setName]=useState('');
+  const [date,setDate]=useState(today);
+  const [amt,setAmt]=useState('');
+  const [err,setErr]=useState('');
+  const loan=parseAmount(amt);
+  const payable=!isNaN(loan)&&loan>0?loan*1.2:null;
+
+  function submit(){
+    setErr('');
+    if(!name.trim()){setErr('Borrower name is required.');return}
+    if(isNaN(loan)||loan<=0){setErr('Enter a valid loan amount greater than zero.');return}
+    if(!date){setErr('Release date is required.');return}
+    onAdd({
+      id:uid(),name:name.trim(),
+      dateOfRelease:date,
+      dueDate:new Date(addDays(date,34)).toISOString().slice(0,10),
+      loanAmount:loan,renewAmount:null,
+      payments:Array(30).fill(null),loanHistory:[],
+    });
+    showToast('Borrower added successfully 🎉');
+    setName('');setAmt('');setDate(today);
+  }
+
+  return(
+    <div className="screen">
+      <div className="ghdr">
+        <div className="ghdr-pill">
+          <div className="ghdr-pill-left">
+            <div className="ghdr-pill-icon">{Ico.add(2)}</div>
+            <span className="ghdr-pill-title">New Borrower</span>
+          </div>
+          <div className="ghdr-pill-badge">5-6 Scheme</div>
+        </div>
+      </div>
+
+      <div className="form-page">
+        <div className="form-card">
+          <div>
+            <label className="flabel">Borrower Name *</label>
+            <input className="finput" placeholder="e.g. Juan Dela Cruz" value={name} onChange={e=>setName(e.target.value)}/>
+          </div>
+          <div>
+            <label className="flabel">Date of Release *</label>
+            <input className="finput" type="date" value={date} onChange={e=>setDate(e.target.value)}/>
+          </div>
+          {date&&(
+            <div>
+              <label className="flabel">Due Date (auto +34 days)</label>
+              <input className="finput" value={fmtF(addDays(date,34))} readOnly/>
+            </div>
+          )}
+          <div>
+            <label className="flabel">Loan Amount (₱) *</label>
+            <div className="peso-wrap">
+              <span className="peso-sym">₱</span>
+              <input className="finput" type="text" inputMode="decimal" placeholder="10,000" value={amt} onChange={e=>setAmt(sanitizeAmountInput(e.target.value))}/>
+            </div>
+          </div>
+        </div>
+
+        {payable&&(
+          <div className="preview-box">
+            <div className="preview-head">📊 5-6 Scheme Preview</div>
+            <div className="preview-row"><span>Loan Amount</span><span>{fmtP(loan)}</span></div>
+            <div className="preview-sep"/>
+            <div className="preview-row"><span>Total Payable (×1.2)</span><span>{fmtP(payable)}</span></div>
+            <div className="preview-row"><span>Daily Collection (÷30)</span><span>{fmtP(Math.ceil(payable/30))}/day</span></div>
+            <div className="preview-total">
+              <span>Your Interest Earned</span>
+              <span>+{fmtP(payable-loan)}</span>
+            </div>
+          </div>
+        )}
+
+        {err&&<div className="err-box">⚠️ {err}</div>}
+        <button className="btn btn-p" onClick={submit}>Add Borrower</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   SCREEN 4 — BORROWER DETAIL
+══════════════════════════════ */
+function Detail({bid,borrowers,onUpdate,onDelete,onBack,showToast}){
+  const raw=borrowers.find(b=>b.id===bid);
+  const b=useMemo(()=>raw?compute(raw):null,[raw]);
+  const [payModal,setPayModal]=useState(null);
+  const [payInput,setPayInput]=useState('');
+  const [renewInput,setRenewInput]=useState('');
+  const [renewDate,setRenewDate]=useState(new Date().toISOString().slice(0,10));
+  const [histModal,setHistModal]=useState(null);
+  const [histExpanded,setHistExpanded]=useState(false);
+  const [delConfirm,setDelConfirm]=useState(false);
+  const inputRef=useRef();
+
+  useEffect(()=>{
+    if(payModal!=null){
+      setPayInput(b.payments[payModal]!=null?String(b.payments[payModal]):'');
+      setTimeout(()=>inputRef.current?.focus(),120);
+    }
+  },[payModal]);
+
+  useEffect(()=>{
+    if(raw)setRenewInput(raw.renewAmount!=null?String(raw.renewAmount):'');
+  },[raw?.renewAmount]);
+
+  if(!b)return null;
+  const today=t0();
+  const pct=Math.min(100,Math.round(b.tc/b.tp*100));
+  const sc=sClass(b.status);
+
+  function dColor(i){
+    if(b.payments[i]!=null&&b.payments[i]>0)return'dg';
+    const d=new Date(b.dates[i]);d.setHours(0,0,0,0);
+    return d<=today?'dr':'dn';
+  }
+
+  function savePay(){
+    const a=parseAmount(payInput);
+    if(isNaN(a)||a<0){showToast('Enter a valid amount');return}
+    const p=[...b.payments];
+    p[payModal]=a===0?null:a;
+    onUpdate(b.id,{payments:p});
+    setPayModal(null);
+    showToast('Payment recorded ✓');
+  }
+
+  function clearPay(){
+    const p=[...b.payments];
+    p[payModal]=null;
+    onUpdate(b.id,{payments:p});
+    setPayModal(null);
+    showToast('Payment cleared');
+  }
+
+  function saveRenew(){
+    if(!renewInput||renewInput==='0'){onUpdate(b.id,{renewAmount:null});showToast('Renewal removed');return}
+    const a=parseAmount(renewInput);
+    if(isNaN(a)||a<=0){showToast('Enter a valid renew amount');return}
+    if(!renewDate){showToast('Select a new release date');return}
+    const testC=compute({...raw,renewAmount:a});
+    if(testC.status==='RENEWED'){
+      const histEntry={
+        loanAmount:raw.loanAmount,
+        dateOfRelease:raw.dateOfRelease,
+        dueDate:raw.dueDate,
+        payments:[...(raw.payments||[])],
+        renewedOn:renewDate,
+        renewedTo:a,
+        tc:b.tc,
+        income:raw.loanAmount*0.2,
+      };
+      onUpdate(b.id,{
+        loanAmount:a,
+        dateOfRelease:renewDate,
+        dueDate:new Date(addDays(renewDate,34)).toISOString().slice(0,10),
+        payments:Array(30).fill(null),
+        renewAmount:null,
+        loanHistory:[...(raw.loanHistory||[]),histEntry],
+      });
+      showToast('Loan renewed — new cycle started 🔄');
+    }else{
+      onUpdate(b.id,{renewAmount:a});
+      showToast('Renewal saved ✓');
+    }
+  }
+
+  function handleDelete(){setDelConfirm(true)}
+
+  return(
+    <>
+    <div className="screen">
+
+      {/* ─ Thin sticky nav bar ─ */}
+      <div className="dhdr">
+        <div className="dhdr-pill">
+          <div className="ghdr-pill-left">
+            <div className="ghdr-pill-icon">
+              {Ico.users(2)}
+            </div>
+            <span className="ghdr-pill-title">Borrower Detail</span>
+          </div>
+          <button className="del-btn" onClick={handleDelete}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18"/>
+              <path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/>
+              <path d="M19 6l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* ─ Hero Card ─ */}
+      <div className="dhdr-hero">
+        <div className="dhdr-hero-top" style={{position:'relative',zIndex:1}}>
+          <div className="dhdr-name">{b.name}</div>
+          <span className="pct-chip">{pct}%</span>
+        </div>
+        <div className="dhdr-dates">Released: {fmtF(b.dateOfRelease)} · Due: {fmtF(b.dueDate)}</div>
+        <div className="dhdr-badges">
+          <Badge status={b.status}/>
+        </div>
+
+        {/* Stats row */}
+        <div className="qstats">
+          <div className="qstat">
+            <div className="qstat-lbl">Collected</div>
+            <div className="qstat-val g">{fmtP(b.tc)}</div>
+          </div>
+          <div className="qstat">
+            <div className="qstat-lbl">Balance</div>
+            <div className={`qstat-val ${b.bal>0?'r':'g'}`}>{fmtP(Math.max(0,b.bal))}</div>
+          </div>
+          <div className="qstat">
+            <div className="qstat-lbl">Can Renew</div>
+            <div className="qstat-val y" style={{fontSize:typeof b.prl==='string'?7:12,lineHeight:1.2}}>
+              {typeof b.prl==='string'?b.prl:fmtP(b.prl)}
+            </div>
+          </div>
+          <div className="qstat">
+            <div className="qstat-lbl">Income</div>
+            <div className="qstat-val y">{fmtP(b.income)}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─ Loan Info Bar (floating card) ─ */}
+      <div className="loan-bar">
+        <div className="loan-bar-item">
+          <div className="loan-bar-lbl">Loan Amount</div>
+          <div className="loan-bar-val" style={{color:'var(--pri2)'}}>{fmtP(b.loanAmount)}</div>
+        </div>
+        <div className="loan-bar-item">
+          <div className="loan-bar-lbl">Total Payable ×1.2</div>
+          <div className="loan-bar-val" style={{color:'var(--txt)'}}>{fmtP(b.tp)}</div>
+        </div>
+        <div className="loan-bar-item">
+          <div className="loan-bar-lbl">Progress</div>
+          <div className="loan-bar-val" style={{color:'var(--grn)'}}>{pct}%</div>
+        </div>
+      </div>
+
+      {/* ─ 30-Day Collection Grid ─ */}
+      <div className="sec-lbl">30-Day Collection Grid</div>
+      <div className="dgrid">
+        {Array.from({length:30},(_,i)=>{
+          const c=dColor(i);
+          const pay=b.payments[i];
+          return(
+            <div key={i} className={`dcell ${c}`} onClick={()=>setPayModal(i)}>
+              <div className="dnum">D{i+1}</div>
+              <div className="ddate">{fmtS(b.dates[i])}</div>
+              <div className="dpay">{pay!=null&&pay>0?fmtP(pay):c==='dr'?'MISS':'—'}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ─ Loan Renewal — only show when loan is done (paid off or all 30 days passed) ─ */}
+      {(()=>{
+        const lastDay=new Date(b.dates[29]);lastDay.setHours(0,0,0,0);
+        const loanDone=b.bal<=0||today>=lastDay;
+        if(!loanDone)return null;
+        return(
+        <>
+      <div className="sec-lbl">Loan Renewal</div>
+      <div className="renew-card">
+        <div className="renew-card-head">Possible Renew Amount</div>
+        <div className="renew-card-amt">
+          {typeof b.prl==='string'?b.prl:fmtP(b.prl)}
+        </div>
+
+        <div className="renew-row">
+          <div className="peso-wrap" style={{flex:1}}>
+            <span className="peso-sym">₱</span>
+            <input
+              className="finput"
+              style={{background:'rgba(255,255,255,.75)',border:'1.5px solid #FDE68A'}}
+              type="text" inputMode="decimal"
+              placeholder="Enter renew amount"
+              value={renewInput}
+              onChange={e=>setRenewInput(sanitizeAmountInput(e.target.value))}
+            />
+          </div>
+          <button className="btn btn-g btn-sm" onClick={saveRenew}>Save</button>
+        </div>
+
+        <div className="renew-date-row">
+          <label className="flabel" style={{color:'#92400E'}}>New Release Date</label>
+          <input
+            className="finput"
+            style={{background:'rgba(255,255,255,.75)',border:'1.5px solid #FDE68A'}}
+            type="date" value={renewDate}
+            onChange={e=>setRenewDate(e.target.value)}
+          />
+          {renewDate&&<div className="renew-note">New due date: {fmtF(addDays(renewDate,34))}</div>}
+        </div>
+
+        {b.renewAmount&&(
+          <div className="renew-status-box">
+            Current Renewal: <strong>{fmtP(b.renewAmount)}</strong><br/>
+            Status: <strong>{b.status}</strong>
+          </div>
+        )}
+      </div>
+        </>
+        );
+      })()}
+
+      {/* ─ Loan History ─ */}
+      {raw.loanHistory&&raw.loanHistory.length>0&&(()=>{
+        const reversed=[...raw.loanHistory].reverse();
+        const LIMIT=3;
+        const hasMore=reversed.length>LIMIT;
+        const visible=histExpanded?reversed:reversed.slice(0,LIMIT);
+        return(
+          <>
+            {/* Section header */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 14px 10px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{width:28,height:28,borderRadius:9,background:'linear-gradient(135deg,#0EA5E9,#1D4ED8)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <span style={{fontSize:13,fontWeight:800,background:'linear-gradient(90deg,var(--pri3),var(--sky))',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+                  Loan History
+                </span>
+              </div>
+              <span style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.0)',background:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',padding:'3px 10px',borderRadius:99,border:'1px solid rgba(29,78,216,.18)',background:'rgba(255,255,255,.85)',color:'#1D4ED8'}}>
+                {raw.loanHistory.length} {raw.loanHistory.length===1?'Cycle':'Cycles'}
+              </span>
+            </div>
+
+            <div className="hist-list">
+              {visible.map((h,i)=>{
+                const cycleNum=raw.loanHistory.length-i;
+                return(
+                  <div key={i} className="hist-card" onClick={()=>setHistModal(raw.loanHistory.length-1-i)}>
+
+                    {/* Gradient header */}
+                    <div className="hist-card-hdr">
+                      <div className="hist-card-cycle-wrap">
+                        <div className="hist-card-cycle-icon">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,.85)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 100 .49L3.51 15"/></svg>
+                        </div>
+                        <span className="hist-card-cycle">Cycle {cycleNum}</span>
+                      </div>
+                      <div className="hist-card-date">
+                        Renewed {fmtF(h.renewedOn)} ›
+                      </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="hist-card-body">
+                      {/* 3 stat chips */}
+                      <div className="hist-stats">
+                        <div className="hist-stat">
+                          <div className="hist-stat-lbl">Loan</div>
+                          <div className="hist-stat-val" style={{color:'#1D4ED8'}}>{fmtP(h.loanAmount)}</div>
+                        </div>
+                        <div className="hist-stat">
+                          <div className="hist-stat-lbl">Collected</div>
+                          <div className="hist-stat-val" style={{color:'#059669'}}>{fmtP(h.tc)}</div>
+                        </div>
+                        <div className="hist-stat">
+                          <div className="hist-stat-lbl">Income</div>
+                          <div className="hist-stat-val" style={{color:'#D97706'}}>{fmtP(h.income)}</div>
+                        </div>
+                      </div>
+
+                      {/* Detail rows */}
+                      <div className="hist-row">
+                        <span className="hist-row-lbl">
+                          <span className="hist-row-lbl-dot" style={{background:'#3B82F6'}}/>
+                          Released
+                        </span>
+                        <span className="hist-row-val">{fmtF(h.dateOfRelease)}</span>
+                      </div>
+                      <div className="hist-row">
+                        <span className="hist-row-lbl">
+                          <span className="hist-row-lbl-dot" style={{background:'#F59E0B'}}/>
+                          Due Date
+                        </span>
+                        <span className="hist-row-val">{fmtF(h.dueDate)}</span>
+                      </div>
+                      <div className="hist-row">
+                        <span className="hist-row-lbl">
+                          <span className="hist-row-lbl-dot" style={{background:'#10B981'}}/>
+                          Renewed To
+                        </span>
+                        <span className="hist-row-val" style={{color:'#0EA5E9',fontWeight:900}}>{fmtP(h.renewedTo)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {hasMore&&(
+              <button onClick={()=>setHistExpanded(e=>!e)} style={{
+                display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                width:'calc(100% - 28px)',margin:'10px 14px 0',
+                padding:'13px',borderRadius:16,
+                border:'1.5px solid rgba(29,78,216,.15)',
+                background:'rgba(255,255,255,.88)',
+                backdropFilter:'blur(12px)',cursor:'pointer',
+                fontFamily:'Inter,sans-serif',fontSize:13,fontWeight:700,color:'#1D4ED8',
+                boxShadow:'0 2px 10px rgba(29,78,216,.1)',
+                transition:'all .18s',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  {histExpanded?<polyline points="18 15 12 9 6 15"/>:<polyline points="6 9 12 15 18 9"/>}
+                </svg>
+                {histExpanded?'Show Less':`Show ${reversed.length-LIMIT} More ${reversed.length-LIMIT===1?'Cycle':'Cycles'}`}
+              </button>
+            )}
+          </>
+        );
+      })()}
+      <div style={{height:24}}/>
+    </div>
+
+    {/* ─ Payment Modal ─ */}
+    {payModal!=null&&(
+      <Portal>
+        <div className="overlay" onClick={()=>setPayModal(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+
+            {/* Frosted pill top bar — same as page headers */}
+            <div className="modal-pill">
+              <div className="modal-handle"/>
+              <div className="modal-pill-title">Day {payModal+1}</div>
+              <div className="modal-pill-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:4,verticalAlign:'middle'}}>
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {fmtF(b.dates[payModal])}
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="modal-body">
+              <div className="modal-sub">Record the payment collected for this day</div>
+
+              {/* Amount input card */}
+              <div className="pay-input-wrap">
+                <div className="pay-input-lbl">Payment Amount</div>
+                <div className="pay-input-row">
+                  <span className="pay-currency">₱</span>
+                  <input
+                    ref={inputRef}
+                    className="pay-field"
+                    type="text" inputMode="decimal"
+                    placeholder="0"
+                    value={payInput}
+                    onChange={e=>setPayInput(sanitizeAmountInput(e.target.value))}
+                    onKeyDown={e=>{if(e.key==='Enter')savePay()}}
+                  />
+                </div>
+                <div className="pay-expected">
+                  <span>Expected daily</span>
+                  <span>{fmtP(Math.ceil(b.tp/30))}/day</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="modal-row">
+                {b.payments[payModal]!=null&&(
+                  <button className="btn" style={{
+                    flex:1,background:'rgba(255,255,255,.1)',
+                    color:'rgba(186,230,253,.85)',border:'1.5px solid rgba(255,255,255,.15)',
+                    borderRadius:14,
+                  }} onClick={clearPay}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Clear
+                  </button>
+                )}
+                <button className="btn" style={{
+                  flex:2,
+                  background:'linear-gradient(135deg,#38BDF8,#2563EB)',
+                  color:'#fff',border:'none',borderRadius:14,
+                  boxShadow:'0 6px 22px rgba(14,165,233,.4)',
+                  fontSize:15,fontWeight:800,
+                }} onClick={savePay}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Save Payment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Portal>
+    )}
+
+    {/* ─ History Modal ─ */}
+    {histModal!=null&&raw.loanHistory&&(()=>{
+      const h=raw.loanHistory[histModal];
+      const hDates=Array.from({length:30},(_,i)=>addDays(h.dateOfRelease,4+i));
+      const cycleNum=histModal+1;
+      return(
+        <Portal>
+          <div className="overlay" onClick={()=>setHistModal(null)}>
+            <div className="modal" style={{maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+
+              {/* Pill header */}
+              <div className="modal-pill">
+                <div className="modal-handle"/>
+                <div style={{display:'flex',alignItems:'center',gap:9}}>
+                  <div style={{width:30,height:30,borderRadius:9,background:'rgba(255,255,255,.14)',border:'1px solid rgba(255,255,255,.22)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,.85)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 100 .49L3.51 15"/></svg>
+                  </div>
+                  <span className="modal-pill-title">Loan Cycle {cycleNum}</span>
+                </div>
+                <div className="modal-pill-badge">Renewed {fmtF(h.renewedOn)}</div>
+              </div>
+
+              {/* Body */}
+              <div className="modal-body">
+                <div className="modal-sub">Released {fmtF(h.dateOfRelease)} · Due {fmtF(h.dueDate)}</div>
+
+                {/* 3 stat chips */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:16}}>
+                  {[['Loan',fmtP(h.loanAmount),'#7DD3FC'],['Collected',fmtP(h.tc),'#6EE7B7'],['Income',fmtP(h.income),'#FCD34D']].map(([l,v,c])=>(
+                    <div key={l} style={{background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.1)',borderRadius:13,padding:'10px 8px',textAlign:'center'}}>
+                      <div style={{fontSize:8,fontWeight:700,color:'rgba(186,230,253,.45)',textTransform:'uppercase',letterSpacing:.5}}>{l}</div>
+                      <div style={{fontSize:14,fontWeight:900,color:c,marginTop:4,letterSpacing:'-.3px'}}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Section label */}
+                <div style={{fontSize:9,fontWeight:800,color:'rgba(186,230,253,.4)',textTransform:'uppercase',letterSpacing:'.9px',marginBottom:10}}>
+                  30-Day Collection
+                </div>
+
+                {/* Day grid */}
+                <div className="dgrid" style={{padding:'0 0 4px'}}>
+                  {Array.from({length:30},(_,i)=>{
+                    const pay=h.payments[i];
+                    const hasPay=pay!=null&&pay>0;
+                    const dayDate=new Date(hDates[i]);dayDate.setHours(0,0,0,0);
+                    const renewedDate=new Date(h.renewedOn);renewedDate.setHours(0,0,0,0);
+                    const cls=hasPay?'dg':dayDate<renewedDate?'dr':'dn';
+                    return(
+                      <div key={i} className={`dcell ${cls}`} style={{cursor:'default'}}>
+                        <div className="dnum">D{i+1}</div>
+                        <div className="ddate">{fmtS(hDates[i])}</div>
+                        <div className="dpay">{hasPay?fmtP(pay):cls==='dr'?'MISS':'—'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Close button */}
+              <div style={{padding:'4px 16px calc(env(safe-area-inset-bottom)+8px)',position:'relative',zIndex:1}}>
+                <button className="btn" style={{
+                  background:'rgba(255,255,255,.1)',color:'rgba(186,230,253,.85)',
+                  border:'1.5px solid rgba(255,255,255,.15)',borderRadius:14,
+                }} onClick={()=>setHistModal(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      );
+    })()}
+
+    {/* ─ Delete Confirm Modal ─ */}
+    {delConfirm&&(
+      <Portal>
+        <div className="overlay" onClick={()=>setDelConfirm(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            {/* Pill header */}
+            <div className="modal-pill">
+              <div className="modal-handle"/>
+              <div className="modal-pill-title">Delete Record</div>
+              <div className="modal-pill-badge" style={{background:'rgba(239,68,68,.2)',border:'1px solid rgba(239,68,68,.35)',color:'#FCA5A5'}}>
+                Irreversible
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="modal-body">
+              {/* Icon */}
+              <div style={{display:'flex',justifyContent:'center',margin:'6px 0 18px'}}>
+                <div style={{
+                  width:64,height:64,borderRadius:20,
+                  background:'rgba(239,68,68,.15)',
+                  border:'1.5px solid rgba(239,68,68,.3)',
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  boxShadow:'0 6px 24px rgba(239,68,68,.2)',
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18"/>
+                    <path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/>
+                    <path d="M19 6l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Text */}
+              <div style={{textAlign:'center',marginBottom:22}}>
+                <div style={{fontSize:18,fontWeight:900,color:'#fff',letterSpacing:'-.3px',marginBottom:8}}>
+                  Delete "{b.name}"?
+                </div>
+                <div style={{fontSize:13,color:'rgba(186,230,253,.6)',fontWeight:500,lineHeight:1.6}}>
+                  All loan records, payment history,<br/>and cycles will be permanently removed.
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="modal-row">
+                <button className="btn" style={{
+                  flex:1,background:'rgba(255,255,255,.1)',
+                  color:'rgba(186,230,253,.85)',border:'1.5px solid rgba(255,255,255,.15)',
+                  borderRadius:14,fontSize:14,fontWeight:700,
+                }} onClick={()=>setDelConfirm(false)}>
+                  Cancel
+                </button>
+                <button className="btn" style={{
+                  flex:1.4,
+                  background:'linear-gradient(135deg,#EF4444,#DC2626)',
+                  color:'#fff',border:'none',borderRadius:14,
+                  fontSize:14,fontWeight:800,
+                  boxShadow:'0 6px 22px rgba(220,38,38,.4)',
+                }} onClick={()=>{onDelete(b.id);setDelConfirm(false)}}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/><path d="M19 6l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Portal>
+    )}
+    </>
+  );
+}
+
+/* ══════════════════════════════
+   SCREEN 5 — SUMMARY
+══════════════════════════════ */
+function Summary({borrowers,onClearAll,showToast}){
+  const [conf,setConf]=useState(false);
+  const list=useMemo(()=>borrowers.map(compute),[borrowers]);
+  const t=useMemo(()=>{
+    const tp=list.reduce((s,b)=>s+b.tp,0);
+    const tc=list.reduce((s,b)=>s+b.tc,0);
+    return{
+      total:list.length,
+      active:list.filter(b=>b.status!=='PAID'&&b.status!=='RENEWED').length,
+      paid:list.filter(b=>b.status==='PAID').length,
+      renewed:list.filter(b=>b.status==='RENEWED').length,
+      lent:list.reduce((s,b)=>s+b.loanAmount,0),
+      collected:list.reduce((s,b)=>s+b.tc+(b.loanHistory||[]).reduce((a,h)=>a+h.tc,0),0),
+      balance:list.reduce((s,b)=>s+Math.max(0,b.bal),0),
+      income:list.reduce((s,b)=>s+b.income,0),
+      rate:tp>0?Math.min(100,Math.round(tc/tp*100)):0,
+    };
+  },[list]);
+
+  function exportData(){
+    const lines=[
+      '=== LENDTRACK PRO EXPORT ===',
+      `Generated: ${new Date().toLocaleString('en-PH')}`,
+      '',
+      `Total Borrowers: ${t.total} | Active: ${t.active} | Paid: ${t.paid} | Renewed: ${t.renewed}`,
+      `Total Lent: ${fmtP(t.lent)} | Collected: ${fmtP(t.collected)} | Balance: ${fmtP(t.balance)}`,
+      `Total Income: ${fmtP(t.income)} | Collection Rate: ${t.rate}%`,
+      '',
+      '--- BORROWER DETAILS ---',
+      ...list.map(b=>`${b.name} | Loan: ${fmtP(b.loanAmount)} | Status: ${b.status} | Collected: ${fmtP(b.tc)} | Balance: ${fmtP(Math.max(0,b.bal))} | Income: ${fmtP(b.income)}`),
+    ];
+    navigator.clipboard.writeText(lines.join('\n'))
+      .then(()=>showToast('Copied to clipboard 📋'))
+      .catch(()=>showToast('Copy failed'));
+  }
+
+  return(
+    <div className="screen">
+      <div className="ghdr">
+        <div className="ghdr-pill">
+          <div className="ghdr-pill-left">
+            <div className="ghdr-pill-icon">{Ico.chart(2)}</div>
+            <span className="ghdr-pill-title">Summary</span>
+          </div>
+          <div className="ghdr-pill-badge">{borrowers.length} Borrowers</div>
+        </div>
+      </div>
+
+      <div className="sum-wrap">
+        {/* Grand KPI Card */}
+        <div className="sum-hero">
+          <div className="sum-hero-lbl">Grand Portfolio Summary</div>
+          <div className="sum-kpi-grid">
+            {[
+              ['Total Borrowers',t.total,'#fff'],
+              ['Active Loans',t.active,'#93C5FD'],
+              ['Total Lent',fmtP(t.lent),'#E0E7FF'],
+              ['Collected',fmtP(t.collected),'#6EE7B7'],
+              ['Balance Left',fmtP(t.balance),'#FCA5A5'],
+              ['Total Income',fmtP(t.income),'#FCD34D'],
+            ].map(([l,v,c])=>(
+              <div key={l}>
+                <div className="sum-kpi-lbl">{l}</div>
+                <div className="sum-kpi-val" style={{color:c}}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div className="sum-rate">
+            <div className="sum-rate-row">
+              <span className="sum-rate-lbl">Overall Collection Rate</span>
+              <span className="sum-rate-val">{t.rate}%</span>
+            </div>
+            <div className="sum-rate-track">
+              <div className="sum-rate-fill" style={{width:`${t.rate}%`}}/>
+            </div>
+          </div>
+        </div>
+
+        {/* Collection Chart */}
+        {borrowers.length>0&&<IncomeChart borrowers={borrowers} noMargin/>}
+
+        {/* Status Breakdown */}
+        <div className="scard">
+          <div className="scard-title">Status Breakdown</div>
+          {[
+            ['NOT YET PAID',list.filter(b=>b.status==='NOT YET PAID').length,'#F59E0B'],
+            ['PAID',t.paid,'#10B981'],
+            ['RENEWED',t.renewed,'#3B82F6'],
+            ['CANNOT RENEW',list.filter(b=>b.status==='CANNOT RENEW').length,'#EF4444'],
+          ].map(([l,c,col])=>(
+            <div key={l} className="srow">
+              <div className="srow-left">
+                <div className="sdot" style={{background:col}}/>
+                <span className="srow-lbl">{l}</span>
+              </div>
+              <span className="srow-count" style={{color:col}}>{c}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Income per Borrower */}
+        {list.length>0&&(
+          <div className="scard">
+            <div className="scard-title">Income per Borrower</div>
+            {list.map(b=>(
+              <div key={b.id} className="irow">
+                <div>
+                  <div className="irow-name">{b.name}</div>
+                  <div className="irow-status"><Badge status={b.status}/></div>
+                </div>
+                <div>
+                  <div className="irow-val">{fmtP(b.income)}</div>
+                  <div className="irow-pct">{Math.min(100,Math.round(b.tc/b.tp*100))}% paid</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Actions */}
+        <button className="print-btn" onClick={()=>window.print()}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print Report
+        </button>
+        <button className="act-btn act-export" onClick={exportData}>{Ico.copy()} Export to Clipboard</button>
+        <button className="act-btn act-clear" onClick={()=>setConf(true)}>{Ico.trash()} Clear All Data</button>
+      </div>
+
+      {/* Clear All Confirm */}
+      {conf&&(
+        <Portal>
+          <div className="overlay" onClick={()=>setConf(false)}>
+            <div className="modal" onClick={e=>e.stopPropagation()}>
+              {/* Pill header */}
+              <div className="modal-pill">
+                <div className="modal-handle"/>
+                <div className="modal-pill-title">Clear All Data</div>
+                <div className="modal-pill-badge" style={{background:'rgba(239,68,68,.2)',border:'1px solid rgba(239,68,68,.35)',color:'#FCA5A5'}}>
+                  Irreversible
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="modal-body">
+                {/* Icon */}
+                <div style={{display:'flex',justifyContent:'center',margin:'6px 0 18px'}}>
+                  <div style={{width:64,height:64,borderRadius:20,background:'rgba(239,68,68,.15)',border:'1.5px solid rgba(239,68,68,.3)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 24px rgba(239,68,68,.2)'}}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                  </div>
+                </div>
+                {/* Text */}
+                <div style={{textAlign:'center',marginBottom:22}}>
+                  <div style={{fontSize:18,fontWeight:900,color:'#fff',letterSpacing:'-.3px',marginBottom:8}}>Delete Everything?</div>
+                  <div style={{fontSize:13,color:'rgba(186,230,253,.6)',fontWeight:500,lineHeight:1.6}}>
+                    This will permanently delete all borrowers<br/>and payment records. Cannot be undone.
+                  </div>
+                </div>
+                {/* Buttons */}
+                <div className="modal-row">
+                  <button className="btn" style={{flex:1,background:'rgba(255,255,255,.1)',color:'rgba(186,230,253,.85)',border:'1.5px solid rgba(255,255,255,.15)',borderRadius:14,fontSize:14,fontWeight:700}} onClick={()=>setConf(false)}>
+                    Cancel
+                  </button>
+                  <button className="btn" style={{flex:1.4,background:'linear-gradient(135deg,#EF4444,#DC2626)',color:'#fff',border:'none',borderRadius:14,fontSize:14,fontWeight:800,boxShadow:'0 6px 22px rgba(220,38,38,.4)'}} onClick={()=>{onClearAll();setConf(false);showToast('All data cleared')}}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/><path d="M19 6l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                    </svg>
+                    Clear All
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════
+   ROOT APP
+══════════════════════════════ */
+function App(){
+  const [borrowers,setBorrowers]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [tab,setTab]=useState('home');
+  const [selId,setSelId]=useState(null);
+  const [toast,setToast]=useState(null);
+  const tk=useRef(0);
+
+  useEffect(()=>{
+    const s=db.get('lendtrack-v2');
+    if(s)setBorrowers(s);
+    setLoading(false);
+  },[]);
+
+  useEffect(()=>{
+    if(!loading)db.set('lendtrack-v2',borrowers);
+  },[borrowers,loading]);
+
+  function showToast(msg){tk.current++;setToast({msg,key:tk.current})}
+  const addB=b=>{setBorrowers(p=>[...p,b]);setTab('home')};
+  const updB=(id,ch)=>setBorrowers(p=>p.map(b=>b.id===id?{...b,...ch}:b));
+  const delB=id=>{setBorrowers(p=>p.filter(b=>b.id!==id));setSelId(null);showToast('Borrower deleted ✓')};
+  const clearAll=()=>{setBorrowers([]);db.del('lendtrack-v2')};
+
+  if(loading)return(
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100dvh',background:'var(--bg)'}}>
+      <div className="spinner"/>
+    </div>
+  );
+
+  const showDetail=(tab==='home'||tab==='borrowers')&&selId;
+
+  const navItems=[
+    {id:'home',label:'Home',icon:w=>Ico.home(w)},
+    {id:'borrowers',label:'Borrowers',icon:w=>Ico.users(w)},
+    {id:'add',label:'+ Add',icon:w=>Ico.add(w)},
+    {id:'summary',label:'Summary',icon:w=>Ico.chart(w)},
+  ];
+
+  return(
+    <>
+      {/* Screen */}
+      {showDetail?(
+        <Detail bid={selId} borrowers={borrowers} onUpdate={updB} onDelete={delB} onBack={()=>setSelId(null)} showToast={showToast}/>
+      ):tab==='home'?(
+        <Dashboard borrowers={borrowers} onSelect={id=>setSelId(id)}/>
+      ):tab==='borrowers'?(
+        <BorrowersList borrowers={borrowers} onSelect={id=>setSelId(id)}/>
+      ):tab==='add'?(
+        <AddBorrower onAdd={addB} showToast={showToast}/>
+      ):(
+        <Summary borrowers={borrowers} onClearAll={clearAll} showToast={showToast}/>
+      )}
+
+      {/* Bottom Nav */}
+      <nav className="nav">
+        <div className="nav-inner">
+          {navItems.map(({id,label,icon})=>{
+            const active=tab===id&&!showDetail;
+            return(
+              <button key={id} className={`nav-btn${active?' active':''}`} onClick={()=>{setTab(id);setSelId(null)}}>
+                {icon(active?2.5:2)}<span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Toast */}
+      {toast&&<Toast key={toast.key} msg={toast.msg} onDone={()=>setToast(null)}/>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
