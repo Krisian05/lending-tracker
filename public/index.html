@@ -1349,6 +1349,56 @@ function Badge({status}){
   return <span className={`badge ${cls}`}>{icon} {status}</span>;
 }
 
+/* ── iOS Install Guide ── */
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.navigator.standalone;
+function IOSInstallBanner(){
+  const [show,setShow]=useState(isIOS);
+  if(!show)return null;
+  return(
+    <div style={{
+      position:'fixed',bottom:90,left:14,right:14,zIndex:400,
+      background:'linear-gradient(145deg,#0C1A3A,#1E3A8A,#1D4ED8)',
+      borderRadius:20,padding:'16px',
+      boxShadow:'0 8px 32px rgba(29,78,216,.5)',
+      border:'1px solid rgba(56,189,248,.25)',
+      animation:'slideUp .35s cubic-bezier(.34,1.2,.64,1)',
+    }}>
+      {/* Header */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:36,height:36,borderRadius:11,background:'linear-gradient(135deg,rgba(56,189,248,.3),rgba(255,255,255,.12))',border:'1.5px solid rgba(255,255,255,.25)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(186,230,253,.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v13"/><path d="M7 9l5 6 5-6"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+          </div>
+          <div>
+            <div style={{fontSize:13,fontWeight:800,color:'#fff'}}>Install LendTrack Pro</div>
+            <div style={{fontSize:10,color:'rgba(186,230,253,.55)',marginTop:1}}>Add to your home screen</div>
+          </div>
+        </div>
+        <button onClick={()=>setShow(false)} style={{background:'rgba(255,255,255,.1)',border:'1px solid rgba(255,255,255,.15)',borderRadius:9,padding:7,cursor:'pointer',color:'rgba(255,255,255,.6)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      {/* Steps */}
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {[
+          [<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>,'Tap the','Share button','at the bottom of Safari'],
+          [<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6EE7B7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,'Select','Add to Home Screen','from the menu'],
+          [<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,'Tap','Add','to install the app'],
+        ].map(([icon,pre,bold,post],i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:10,background:'rgba(255,255,255,.07)',borderRadius:12,padding:'9px 12px'}}>
+            <div style={{width:28,height:28,borderRadius:9,background:'rgba(255,255,255,.1)',border:'1px solid rgba(255,255,255,.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              {icon}
+            </div>
+            <div style={{fontSize:12,color:'rgba(186,230,253,.75)',fontWeight:500}}>
+              {pre} <span style={{color:'#fff',fontWeight:800}}>{bold}</span> {post}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Install Banner ── */
 function InstallBanner(){
   const [show,setShow]=useState(()=>!!window.__installPrompt);
@@ -2966,8 +3016,9 @@ function App(){
         </div>
       </nav>
 
-      {/* Install Banner */}
+      {/* Install Banners */}
       <InstallBanner/>
+      <IOSInstallBanner/>
 
       {/* Toast */}
       {toast&&<Toast key={toast.key} msg={toast.msg} onDone={()=>setToast(null)}/>}
