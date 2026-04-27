@@ -1,5 +1,5 @@
 // Service Worker for Personal Lending — Collection Tracker
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `lendtrack-static-${CACHE_VERSION}`;
 const DATA_CACHE = `lendtrack-data-${CACHE_VERSION}`;
 
@@ -71,6 +71,21 @@ async function flushQueue() {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((resp) => {
+          if (resp.ok) {
+            const clone = resp.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/app.html')))
+    );
+    return;
+  }
 
   // API calls: network-first, queue writes if offline
   if (url.pathname.startsWith('/api/')) {

@@ -1754,7 +1754,7 @@ function Dashboard({borrowers,onSelect}){
             </svg>
           </div>
           <div className="empty-title">Welcome to LendTrack Pro</div>
-          <div className="empty-sub">Tap <strong>+ Add</strong> to record your first borrower and start tracking your lending portfolio.</div>
+          <div className="empty-sub">Tap <strong>New</strong> to record your first borrower and start tracking your lending portfolio.</div>
         </div>
       )}
       <div style={{height:24}}/>
@@ -1883,7 +1883,7 @@ function BorrowersList({borrowers,onSelect}){
             }
           </div>
           <div className="empty-title">{borrowers.length===0?'No borrowers yet':'Nothing found'}</div>
-          <div className="empty-sub">{borrowers.length===0?'Tap + Add to create your first borrower record.':'Try adjusting your search or filter.'}</div>
+          <div className="empty-sub">{borrowers.length===0?'Tap New to create your first borrower record.':'Try adjusting your search or filter.'}</div>
         </div>
       ):(
         <>
@@ -2839,7 +2839,7 @@ function App(){
   const navItems=[
     {id:'home',label:'Home',icon:w=>Ico.home(w)},
     {id:'borrowers',label:'Borrowers',icon:w=>Ico.users(w)},
-    {id:'add',label:'+ Add',icon:w=>Ico.add(w)},
+    {id:'add',label:'New',icon:w=>Ico.add(w)},
     {id:'summary',label:'Summary',icon:w=>Ico.chart(w)},
   ];
 
@@ -2910,7 +2910,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    navigator.serviceWorker.register('/sw.js').then(reg=>reg.update()).catch(()=>{});
   });
 }
 </script>
