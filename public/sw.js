@@ -5,6 +5,7 @@ const DATA_CACHE = `lendtrack-data-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
   '/',
+  '/app.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
