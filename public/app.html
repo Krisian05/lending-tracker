@@ -1211,12 +1211,8 @@ function compute(b){
   const ra=b.renewAmount;
   if(ra&&ra>0){
     if(tc===0||(typeof prl==='number'&&prl===0))status='CANNOT RENEW';
-    else if(bal<=0){status=ra<b.loanAmount?`INVALID - MIN ${fmtP(b.loanAmount)}`:'RENEWED'}
-    else{
-      if(typeof prl==='number'&&ra>prl)status=`INVALID - MAX ${fmtP(prl)}`;
-      else if(ra<b.loanAmount)status=`INVALID - MIN ${fmtP(b.loanAmount)}`;
-      else status='RENEWED';
-    }
+    else if(typeof prl==='number'&&ra>prl)status=`INVALID - MAX ${fmtP(prl)}`;
+    else status='RENEWED';
   }else if(bal<=0)status='PAID';
   else status='NOT YET PAID';
   let income=0;
